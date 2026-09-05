@@ -1,0 +1,149 @@
+# phishing-url-analyzer configuration
+# IMPORTANT: secrets must NEVER be stored here - environment variables only
+# (a git-ignored .env file may supply them; see appconfig.load_env_file).
+
+application:
+  name: phishing-url-analyzer
+  version: 0.7.0
+
+server:
+  host: 127.0.0.1
+  port: 5000
+  debug: false
+
+paths:
+  raw_data_dir: data/raw
+  processed_data_dir: data/processed
+  processed_dataset_file: data/processed/urls.csv
+  dataset_stats_file: data/processed/dataset_stats.json
+  model_dir: model
+  log_dir: logs
+  database_path: data/scans.db
+  alert_log_path: data/alerts.log
+
+api:
+  rate_limit: "30 per minute"        # per client IP (flask-limiter)
+  batch_limit: 50
+  history_default_limit: 50
+  history_max_limit: 500
+  request_body_max_bytes: 65536
+
+cache:
+  max_entries: 512                   # bounded LRU, keyed by normalized URL
+
+severity:                            # calibrated-probability bands (verdict-independent)
+  low_max: 0.25
+  medium_max: 0.60
+  high_max: 0.90
+
+enrichment:
+  enabled_by_default: false          # WHOIS/DNS per request is opt-in (latency)
+  include_external_by_default: false # VirusTotal cross-check is opt-in too
+
+history:
+  top_shap_increasing: 5
+  top_shap_decreasing: 3
+
+alerts:
+  enabled: true
+  vendor: PhishingUrlAnalyzer
+  product: URL Analysis Platform
+  max_bytes: 5242880
+  backup_count: 3
+
+logging:
+  file: app.log
+  level: INFO
+  max_bytes: 5242880
+  backup_count: 3
+
+virustotal:
+  enabled: true                      # feature switch; ALSO needs VT_API_KEY
+  base_url: https://www.virustotal.com/api/v3
+  timeout_seconds: 8
+  min_request_interval_seconds: 15   # local throttle: free tier = 4 req/min
+  note: >
+    External intelligence cross-check, reported separately from the local
+    ML verdict and never used for the classification decision. LOOKUP
+    ONLY: URLs are never submitted to VirusTotal for scanning, so the
+    service never triggers a visit of the analyzed URL. Requires the
+    VT_API_KEY environment variable; without it the feature reports
+    'disabled' and the application works fully. VirusTotal results are
+    third-party engine opinions, NOT ground truth.
+
+dataset:
+  random_seed: 42
+  target_phishing: 5000
+  target_legitimate: 5000
+  max_urls_per_domain: 5
+  legitimate_domain_pool: 100000
+  phishtank_csv: data/raw/phishtank.csv
+
+sources:
+  openphish_feed_url: https://openphish.com/feed.txt
+  urlhaus_text_recent_url: https://urlhaus.abuse.ch/downloads/text_recent/
+  urlhaus_text_url: https://urlhaus.abuse.ch/downloads/text/
+  urlhaus_api_text_url: https://urlhaus-api.abuse.ch/v1/text/
+  tranco_api_base: https://tranco-list.eu/api
+  majestic_csv_url: https://downloads.majestic.com/majestic_million.csv
+
+features:
+  tfidf:
+    analyzer: char
+    ngram_range: [3, 5]
+    min_df: 3
+    max_features: 5000
+
+explainability:
+  top_k_features: 10
+  shap_backend: auto        # auto | shap | native
+  ioc:
+    long_path_chars: 100
+    many_query_params: 5
+    many_subdomains: 3
+    many_path_segments: 5
+    max_encoded_samples: 5
+
+network:
+  user_agent: "phishing-url-analyzer/0.7.0 (MCA academic research project; defensive URL analysis)"
+  feed_connect_timeout: 10
+  feed_read_timeout: 60
+  feed_retries: 3
+  feed_retry_backoff: 2.0
+  max_feed_mb: 200
+  tranco_poll_timeout: 120
+  enrichment_timeout: 5
+
+model:
+  model_path: model/model.joblib
+  metadata_path: model/metadata.json
+  threshold_path: model/threshold.json
+  metrics_path: model/model_metrics.csv
+  notes_path: model/phase2_notes.json
+  test_errors_path: model/test_errors.csv
+  cv_folds: 5
+  selected_model: lightgbm
+  calibration:
+    method: sigmoid
+    note: >
+      Calibrator is fitted on the VALIDATION split via FrozenEstimator.
+      Train and validation share no registrable domains (domain-aware
+      splits), so the calibrator sees only held-out data. Raw model
+      scores are NOT probabilities; only calibrated outputs are.
+  threshold_policy:
+    target_recall: 0.97
+    min_precision: 0.90
+    rule: >
+      Among thresholds with recall >= target_recall AND precision >=
+      min_precision: maximize recall, then precision, then choose the
+      lowest threshold. If none qualifies, fall back to the F2-optimal
+      threshold and report the shortfall honestly. Selected on the
+      validation split ONLY; never on test.
+  split:
+    train_frac: 0.6
+    val_frac: 0.2
+    test_frac: 0.2
+    note: >
+      Domains are assigned to exactly one split. test.csv is FROZEN: not used
+      for feature fitting, model selection, hyperparameter or threshold
+      decisions; evaluated once in Phase 3 after the final model is fixed.

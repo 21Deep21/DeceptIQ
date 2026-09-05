@@ -1,0 +1,17 @@
+# Direct dependencies (Phases 0-5). Pinned versions: requirements.lock.txt
+requests
+PyYAML
+pandas
+numpy
+tldextract
+python-whois
+dnspython
+scikit-learn
+joblib
+pytest
+xgboost
+lightgbm
+catboost   # optional at runtime: auto-skipped with an honest report if unavailable
+shap       # optional at runtime: LightGBM native TreeSHAP is the fallback
+flask
+flask-limiter

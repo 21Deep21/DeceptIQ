@@ -1,0 +1,124 @@
+{
+  "model_name": "lightgbm",
+  "created_at": "2026-09-04T08:02:31+00:00",
+  "random_seed": 42,
+  "selection_rationale": "LightGBM selected from the Phase 2 comparison. Measured grouped CV on the train split: recall 0.9980 (+/-0.0024), precision 0.9980 (+/-0.0024), F1 0.9980, ROC-AUC 0.9998, PR-AUC 0.9999 - tied-best CV recall with CatBoost (0.9980) and above XGBoost (0.9967), LogReg (0.9950), RandomForest (0.9924). Validation at threshold 0.5 was perfect (tn=993 fp=0 fn=0 tp=1000). Chosen over CatBoost for ~6x faster fitting/inference (1.2-1.6s vs 7.9-9.7s per fit), which matters for the web application, and for straightforward SHAP TreeExplainer support. The stacking ensemble was NOT retained: validation performance was identical (saturated) while adding 4 base models, higher latency and harder explainability - the project spec requires complexity to be justified by measured benefit, which it was not.",
+  "calibration": {
+    "method": "sigmoid",
+    "approach": "CalibratedClassifierCV(FrozenEstimator(raw_pipeline)) fitted on the validation split",
+    "no_domain_overlap": "train and validation share no registrable domains",
+    "caveat": "calibrator and threshold both use the validation split; the sigmoid adds 2 parameters so in-sample optimism on the validation rows is negligible; the test split was never used for calibration or threshold selection",
+    "note": "raw model scores are scores, not probabilities; only calibrated outputs are reported as probabilities"
+  },
+  "threshold": {
+    "threshold": 0.7833091856528934,
+    "recall": 1.0,
+    "precision": 1.0,
+    "f1_at_threshold": 1.0,
+    "fallback": false,
+    "fallback_reason": null,
+    "target_recall": 0.97,
+    "min_precision": 0.9,
+    "n_qualifying_thresholds": 142,
+    "max_recall_any_threshold": 1.0
+  },
+  "split_stats": {
+    "seed": 42,
+    "fracs": {
+      "train": 0.6,
+      "val": 0.2,
+      "test": 0.2
+    },
+    "rows": {
+      "train": 5993,
+      "val": 1993,
+      "test": 1983
+    },
+    "by_label": {
+      "train": {
+        "1": 3011,
+        "0": 2982
+      },
+      "val": {
+        "1": 1000,
+        "0": 993
+      },
+      "test": {
+        "0": 994,
+        "1": 989
+      }
+    },
+    "domains": {
+      "train": 5092,
+      "val": 1697,
+      "test": 1698
+    },
+    "dual_label_domains": 1,
+    "domain_overlap": {
+      "train_val": 0,
+      "train_test": 0,
+      "val_test": 0
+    }
+  },
+  "rows": {
+    "train": 5993,
+    "val": 1993,
+    "test": 1983
+  },
+  "feature_set": {
+    "dense_lexical": 26,
+    "tfidf": "char (3,5)-gram TF-IDF fitted on training data only"
+  },
+  "test_results": {
+    "calibrated_at_threshold": {
+      "threshold": 0.7833,
+      "accuracy": 0.9985,
+      "precision": 1.0,
+      "recall": 0.997,
+      "f1": 0.9985,
+      "roc_auc": 0.9991,
+      "pr_auc": 0.9995,
+      "tn": 994,
+      "fp": 0,
+      "fn": 3,
+      "tp": 986,
+      "brier": 0.0012,
+      "ece_10bin": 0.0012
+    },
+    "raw_at_0.5_reference": {
+      "accuracy": 0.9985,
+      "precision": 1.0,
+      "recall": 0.997,
+      "f1": 0.9985,
+      "roc_auc": 0.9991,
+      "pr_auc": 0.9995,
+      "tn": 994,
+      "fp": 0,
+      "fn": 3,
+      "tp": 986,
+      "brier": 0.0012,
+      "ece_10bin": 0.0013
+    },
+    "n_test_rows": 1983,
+    "n_misclassified": 3
+  },
+  "artifacts": {
+    "bundle": "model/model.joblib",
+    "bundle_sha256": "6e3c3b497c5e58c01e942d4402c4a4c191e8dc061a397e8168d6b88e9d3c8c62",
+    "threshold_json": "model/threshold.json",
+    "metrics_csv": "model/model_metrics.csv",
+    "test_errors_csv": "model/test_errors.csv"
+  },
+  "test_evaluated": true,
+  "test_evaluated_at": "2026-09-04T08:02:31+00:00",
+  "library_versions": {
+    "scikit-learn": "1.9.0",
+    "numpy": "2.5.2",
+    "pandas": "3.0.5",
+    "joblib": "1.6.0",
+    "lightgbm": "4.7.0",
+    "xgboost": "3.4.1",
+    "catboost": "1.2.10"
+  },
+  "one_time_discipline": "test.csv evaluated exactly once per run; forced re-runs (--force) overwrite and re-stamp"
+}

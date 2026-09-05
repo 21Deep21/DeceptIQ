@@ -1,0 +1,40 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# --- Virtual environment ---
+.venv/
+venv/
+
+# --- Secrets / environment (NEVER commit keys) ---
+.env
+*.env
+*credentials*
+
+# --- Data: downloaded feeds & generated files (too large / not source) ---
+data/raw/*
+data/processed/*
+!data/raw/.gitkeep
+!data/processed/.gitkeep
+data/scans.db
+data/scans.db-journal
+data/alerts.log
+
+# --- Model artifacts: large binaries (small JSON/CSV metadata stays tracked) ---
+model/*.joblib
+
+# --- Logs ---
+logs/*
+!logs/.gitkeep
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+data/scans.db-wal
+data/scans.db-shm

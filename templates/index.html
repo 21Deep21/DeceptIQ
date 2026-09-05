@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Phishing URL Analyzer — Investigation Console</title>
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+<header id="topbar">
+  <div class="brand">
+    <span class="brand-name">PHISHING URL ANALYZER</span>
+    <span class="brand-sub">URL INVESTIGATION CONSOLE</span>
+  </div>
+  <div class="top-status">
+    <span id="chip-vt" class="chip">VT: —</span>
+    <span id="chip-sys" class="chip"><span class="dot off" id="sys-dot"></span><span id="sys-label">SYSTEM</span></span>
+    <span id="clock" class="mono dim">--:--:--</span>
+  </div>
+</header>
+
+<div id="layout">
+  <nav id="sidebar" aria-label="Console sections">
+    <button class="nav-btn active" data-view="investigate" type="button">INVESTIGATE</button>
+    <button class="nav-btn" data-view="batch" type="button">BATCH SCAN</button>
+    <button class="nav-btn" data-view="history" type="button">HISTORY</button>
+    <button class="nav-btn" data-view="model" type="button">MODEL</button>
+    <button class="nav-btn" data-view="dataset" type="button">DATASET</button>
+    <div class="side-meta">
+      <div class="kv"><span class="k">MODEL</span><span class="v mono" id="side-model">—</span></div>
+      <div class="kv"><span class="k">THRESHOLD</span><span class="v mono" id="side-threshold">—</span></div>
+      <div class="kv"><span class="k">EXPLAINER</span><span class="v" id="side-backend">—</span></div>
+      <div class="kv"><span class="k">CACHE</span><span class="v mono" id="side-cache">—</span></div>
+    </div>
+  </nav>
+
+  <main id="content">
+    <!-- ============ INVESTIGATE ============ -->
+    <section id="view-investigate" class="view active">
+      <div class="panel">
+        <div class="panel-header"><span>URL INVESTIGATION</span></div>
+        <div class="panel-body">
+          <form id="scan-form" autocomplete="off">
+            <div class="scan-row">
+              <input id="url-input" type="text" spellcheck="false" autocapitalize="off"
+                     placeholder="https://suspicious.example/login">
+              <button type="submit" id="analyze-btn" class="btn-primary">ANALYZE</button>
+            </div>
+            <div class="scan-opts">
+              <label class="opt"><input type="checkbox" id="opt-enrich"> WHOIS / DNS enrichment</label>
+              <label class="opt"><input type="checkbox" id="opt-vt"> VirusTotal cross-check</label>
+              <span class="opt-note dim">Optional network lookups — the analyzed URL is never visited</span>
+            </div>
+          </form>
+          <div id="scan-msg" class="msg hidden"></div>
+        </div>
+      </div>
+
+      <div id="result" class="hidden">
+        <div class="panel">
+          <div class="panel-header">
+            <span>VERDICT</span>
+            <span class="panel-actions">
+              <button id="btn-export-json" class="btn-mini" type="button">EXPORT JSON</button>
+              <button id="btn-export-csv" class="btn-mini" type="button">EXPORT CSV</button>
+            </span>
+          </div>
+          <div class="panel-body" id="verdict-body"></div>
+        </div>
+
+        <div class="panel">
+          <div class="panel-header"><span>URL DECONSTRUCTION</span><span id="decon-url" class="mono dim ellip"></span></div>
+          <div class="panel-body" id="decon-body"></div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel">
+            <div class="panel-header"><span>RISK FACTORS — SHAP EVIDENCE</span><span id="shap-meta" class="mono dim ellip"></span></div>
+            <div class="panel-body" id="shap-body"></div>
+          </div>
+          <div class="panel">
+            <div class="panel-header"><span>INDICATORS OF COMPROMISE</span><span class="dim" id="ioc-count"></span></div>
+            <div class="panel-body" id="ioc-body"></div>
+          </div>
+        </div>
+
+        <div class="grid-2">
+          <div class="panel hidden" id="enrich-panel">
+            <div class="panel-header"><span>DOMAIN INTELLIGENCE — WHOIS / DNS</span></div>
+            <div class="panel-body" id="enrich-body"></div>
+          </div>
+          <div class="panel hidden" id="vt-panel">
+            <div class="panel-header"><span>EXTERNAL INTELLIGENCE — VIRUSTOTAL</span><span id="vt-status-chip" class="chip"></span></div>
+            <div class="panel-body" id="vt-body"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ BATCH ============ -->
+    <section id="view-batch" class="view">
+      <div class="panel">
+        <div class="panel-header"><span>BATCH URL SCAN</span><span class="dim">MAX 50 URLS · ONE PER LINE</span></div>
+        <div class="panel-body">
+          <textarea id="batch-input" rows="8" spellcheck="false"
+            placeholder="https://example.com/&#10;http://192.0.2.10:8080/login.php"></textarea>
+          <div class="batch-actions">
+            <button id="btn-batch-clear" class="btn-mini" type="button">CLEAR</button>
+            <button id="btn-batch" class="btn-primary" type="button">SCAN BATCH</button>
+          </div>
+          <div id="batch-msg" class="msg hidden"></div>
+        </div>
+      </div>
+      <div id="batch-result" class="hidden">
+        <div class="panel">
+          <div class="panel-header"><span>BATCH RESULTS</span><span id="batch-summary" class="mono"></span></div>
+          <div class="panel-body no-pad" id="batch-body"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ HISTORY ============ -->
+    <section id="view-history" class="view">
+      <div class="panel">
+        <div class="panel-header">
+          <span>RECENT SCANS</span>
+          <span class="panel-actions">
+            <input id="hist-search" type="text" class="input-mini" placeholder="search URL">
+            <select id="hist-verdict" class="input-mini">
+              <option value="">verdict: all</option>
+              <option value="phishing">phishing</option>
+              <option value="safe">safe</option>
+            </select>
+            <select id="hist-severity" class="input-mini">
+              <option value="">severity: all</option>
+              <option>LOW</option><option>MEDIUM</option><option>HIGH</option><option>CRITICAL</option>
+            </select>
+            <select id="hist-order" class="input-mini">
+              <option value="desc">newest first</option>
+              <option value="asc">oldest first</option>
+            </select>
+            <button id="btn-hist-refresh" class="btn-mini" type="button">REFRESH</button>
+          </span>
+        </div>
+        <div class="panel-body no-pad">
+          <table class="data-table" id="hist-table">
+            <thead>
+              <tr>
+                <th class="sortable" data-sort="time">TIME</th>
+                <th>URL</th>
+                <th class="sortable" data-sort="verdict">VERDICT</th>
+                <th class="sortable" data-sort="score">SCORE</th>
+                <th class="sortable" data-sort="severity">SEVERITY</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody id="hist-tbody"></tbody>
+          </table>
+          <div class="table-footer" id="hist-footer"></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ MODEL ============ -->
+    <section id="view-model" class="view">
+      <div class="grid-2">
+        <div class="panel">
+          <div class="panel-header"><span>DEPLOYED MODEL</span></div>
+          <div class="panel-body" id="model-body"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-header"><span>CLASSIFICATION THRESHOLD</span></div>
+          <div class="panel-body" id="threshold-body"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span>HELD-OUT TEST EVALUATION (ONE-TIME, FROZEN SPLIT)</span></div>
+        <div class="panel-body" id="test-body"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span>MODEL SELECTION RATIONALE</span></div>
+        <div class="panel-body" id="rationale-body"></div>
+      </div>
+    </section>
+
+    <!-- ============ DATASET ============ -->
+    <section id="view-dataset" class="view">
+      <div class="panel">
+        <div class="panel-header"><span>DATASET COMPOSITION</span></div>
+        <div class="panel-body" id="dataset-body"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span>SOURCES</span></div>
+        <div class="panel-body no-pad" id="sources-body"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-header"><span>DATASET NOTES &amp; LIMITATIONS</span></div>
+        <div class="panel-body" id="notes-body"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script src="/static/js/script.js"></script>
+</body>
+</html>
