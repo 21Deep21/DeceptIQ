@@ -51,7 +51,6 @@ def test_clean_drops_hosts_without_registrable_domain():
 
 def test_domain_cap_is_per_label():
     mal = [_e(f"https://evil.example.com/p{i}", 1) for i in range(4)]
-    ben = [_e(f"https://docs.example.org/g{i}", 1) for i in range(0)]  # placeholder, replaced below
     ben = [_e(f"https://docs.example.org/g{i}", 0, source="sitemap", threat_type="benign")
            for i in range(5)]
     entries, _ = clean_entries(mal + ben)

@@ -40,10 +40,6 @@ def test_ip_host_components_and_flags():
     assert c["port"] == 8080
     names = {f["flag"] for f in r["flags"]}
     assert {"ip_host", "unusual_port", "percent_encoding"} <= names
-    assert any(e["decoded"] == "/" for e in
-               [{"encoded": m, "decoded": m} for m in []]) or True  # placeholder no-op
-    # percent-decoded samples are exposed
-    assert r["iocs"][-1]["type"] != "X"  # table built without exception
 
 
 def test_unusual_port_flag():
