@@ -1,5 +1,5 @@
 {
-  "created_at": "2026-09-04T07:45:57+00:00",
+  "created_at": "2026-09-06T06:26:27+00:00",
   "phase": "2 - model comparison",
   "random_seed": 42,
   "n_folds": 5,
@@ -13,28 +13,28 @@
       "test": 0.2
     },
     "rows": {
-      "train": 5993,
-      "val": 1993,
-      "test": 1983
+      "train": 6056,
+      "val": 2011,
+      "test": 1933
     },
     "by_label": {
       "train": {
-        "1": 3011,
-        "0": 2982
+        "0": 3080,
+        "1": 2976
       },
       "val": {
-        "1": 1000,
-        "0": 993
+        "0": 1008,
+        "1": 1003
       },
       "test": {
-        "0": 994,
-        "1": 989
+        "1": 1021,
+        "0": 912
       }
     },
     "domains": {
-      "train": 5092,
-      "val": 1697,
-      "test": 1698
+      "train": 3762,
+      "val": 1254,
+      "test": 1254
     },
     "dual_label_domains": 1,
     "domain_overlap": {
@@ -62,7 +62,7 @@
       "l1_ratio": "0.0",
       "max_iter": "1000",
       "n_jobs": "None",
-      "penalty": "l2",
+      "penalty": "deprecated",
       "random_state": "42",
       "solver": "liblinear",
       "tol": "0.0001",
@@ -167,5 +167,5 @@
     "dense_lexical": 26,
     "tfidf": "char n-gram (3,5) TF-IDF fitted per fold / per training split inside URLFeatureBuilder"
   },
-  "runtime_seconds": 157.4
+  "runtime_seconds": 269.8
 }
