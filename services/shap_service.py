@@ -3,25 +3,27 @@
 Two interchangeable EXACT TreeSHAP backends:
   * "shap"   - shap.TreeExplainer (the shap package; depends on numba).
   * "native" - LightGBM's built-in TreeSHAP (booster.predict(pred_contrib=True)),
-               the same algorithm implemented in LightGBM's C++ core; no
-               shap/numba dependency. Automatic fallback when the shap
-               package is unavailable (e.g. no wheel for this Python).
+               the same algorithm in LightGBM's C++ core; no shap/numba
+               dependency. LIGHTGBM pipelines only (sklearn models have no
+               booster): with a sklearn raw model the shap package is required.
+The active backend is selected at construction with a health check and is
+REPORTED in every explanation - never assumed.
 
-The active backend is selected at construction with a health check and
-is REPORTED in every explanation - never assumed.
+EXPLANATION SPACE (model-dependent, reported per explanation):
+  * LightGBM pipelines : base_value + sum(phi_i) == raw margin (log-odds).
+  * sklearn models (RandomForest): no margin output exists, so TreeExplainer
+    explains the PREDICTED PROBABILITY: base_value + sum(phi_i) ~= p(phishing).
+    Known, documented quirk: sklearn-RF TreeSHAP sums can deviate slightly
+    from predict_proba (this trips shap's own additivity check), so that
+    internal check is disabled here and replaced by OUR per-URL measured
+    reconstruction deviation, which is reported, never hidden.
+  In BOTH spaces: phi_i > 0 -> evidence INCREASES phishing risk; phi_i < 0 ->
+  DECREASES it. SHAP values are NOT probabilities.
 
-Explanation space (documented, verified numerically per URL):
-  base_value + sum(phi_i) == raw LightGBM margin (log-odds)
-  base_value = expected margin over the training data.
-  phi_i > 0  -> feature evidence INCREASES phishing risk (log-odds)
-  phi_i < 0  -> feature evidence DECREASES phishing risk
-The DEPLOYED probability is a sigmoid (Platt) calibration of the raw
-margin - a monotone mapping, so the direction of each feature's
-evidence is preserved. SHAP values are NOT probabilities.
-
-Inputs must be normalisable URL strings (features.url_utils.
-normalize_url is applied first; malformed input raises
-MalformedURLError and is the caller's responsibility to report).
+The DEPLOYED probability (sigmoid-calibrated) decides the verdict; SHAP
+explains the evidence of the underlying raw model. Inputs must be
+normalisable URL strings (malformed input raises MalformedURLError and is
+the caller's responsibility to report).
 """
 
 from __future__ import annotations
@@ -48,7 +50,9 @@ except ImportError as exc:  # expected on Python versions without numba wheels
 
 DENSE_COUNT = len(FEATURE_NAMES)
 MIN_ABS_CONTRIBUTION = 1e-9
-RECONSTRUCTION_WARN_TOL = 0.01
+RECONSTRUCTION_WARN_TOL = 0.01       # log-odds space (LightGBM)
+PROB_RECONSTRUCTION_WARN_TOL = 0.05  # probability space (sklearn RF: known
+                                     # small tree-summation deviations)
 
 BACKEND_LABELS = {
     "shap": "shap.TreeExplainer (exact TreeSHAP)",
@@ -69,12 +73,13 @@ class UrlExplanation:
     url: str
     backend: str
     base_value: float
-    raw_margin: Optional[float]
+    raw_margin: Optional[float]        # the explained model OUTPUT (see `space`)
     reconstruction_error: Optional[float]
     lexical_total: float
     ngram_total: float
     increasing: List[FeatureContribution] = field(default_factory=list)
     decreasing: List[FeatureContribution] = field(default_factory=list)
+    space: str = "log-odds"            # "log-odds" (LightGBM) | "probability" (sklearn)
 
     @property
     def backend_label(self) -> str:
@@ -93,6 +98,7 @@ class UrlExplanation:
             "url": self.url,
             "backend": self.backend,
             "backend_label": self.backend_label,
+            "space": self.space,
             "base_value": round(self.base_value, 6),
             "raw_margin": None if self.raw_margin is None else round(self.raw_margin, 6),
             "reconstruction_error": (None if self.reconstruction_error is None
@@ -121,12 +127,17 @@ class ShapExplainer:
         self._n_features = len(self.feature_names)
         self._top_k_default = int(top_k_default)
         self._tree_explainer = None
+        self._is_lightgbm = hasattr(self.model, "booster_") and self.model.booster_ is not None
+        # Explanation space: LightGBM explains the raw log-odds margin; sklearn
+        # models (e.g. RandomForest) have no margin output, so TreeExplainer
+        # explains the predicted probability instead. Reported per explanation.
+        self.space = "log-odds" if self._is_lightgbm else "probability"
         self.backend = self._resolve_backend(backend)
 
     # ------------------------------------------------------------ backend
 
     def _require_native_capable(self, why: str) -> None:
-        if not (hasattr(self.model, "booster_") and self.model.booster_ is not None):
+        if not self._is_lightgbm:
             raise RuntimeError(
                 f"{why}: the native TreeSHAP backend requires a fitted LightGBM "
                 f"model (got {type(self.model).__name__}). Install the shap "
@@ -152,10 +163,11 @@ class ShapExplainer:
         try:  # health check (also triggers numba JIT once, at startup)
             t0 = time.time()
             te = shap.TreeExplainer(self.model)
-            sv = te.shap_values(np.zeros((1, self._n_features), dtype=np.float64))
+            sv = te.shap_values(np.zeros((1, self._n_features), dtype=np.float64),
+                                check_additivity=False)
             _ = np.asarray(sv).shape
-            logger.info("shap.TreeExplainer ready (health check + JIT: %.1fs)",
-                        time.time() - t0)
+            logger.info("shap.TreeExplainer ready (health check + JIT: %.1fs; space=%s)",
+                        time.time() - t0, self.space)
             self._tree_explainer = te
             return "shap"
         except Exception as exc:
@@ -169,12 +181,20 @@ class ShapExplainer:
     # ------------------------------------------------------------ compute
 
     def _compute_shap(self, Xd: np.ndarray) -> Tuple[np.ndarray, np.ndarray]:
-        """(shap_values [n, m], base_values [n]) in log-odds space."""
+        """(shap_values [n, m], base_values [n]) in self.space."""
         if self.backend == "shap":
-            sv = self._tree_explainer.shap_values(Xd)
+            # check_additivity=False: sklearn-RF TreeSHAP sums can deviate from
+            # predict_proba by small float amounts (a known shap/sklearn quirk
+            # that trips the internal check). Our per-URL reconstruction check
+            # in explain() measures and reports the actual deviation instead.
+            sv = self._tree_explainer.shap_values(Xd, check_additivity=False)
             if isinstance(sv, (list, tuple)):  # older APIs: [class0, class1]
                 sv = sv[-1]
             sv = np.asarray(sv, dtype=np.float64)
+            if sv.ndim == 3 and sv.shape[:2] == Xd.shape and sv.shape[2] >= 2:
+                # sklearn classifiers (RandomForest): per-class axis
+                # (n, m, n_classes) -> positive-class slice (n, m)
+                sv = sv[:, :, -1]
             if sv.ndim != 2 or sv.shape != Xd.shape:
                 raise RuntimeError(f"unexpected shap_values shape {sv.shape} "
                                    f"for input {Xd.shape}")
@@ -191,11 +211,19 @@ class ShapExplainer:
                                f"expected {expected}")
         return contribs[:, :-1], contribs[:, -1]
 
-    def _raw_margins(self, Xd: np.ndarray) -> Optional[np.ndarray]:
-        if not (hasattr(self.model, "booster_") and self.model.booster_ is not None):
-            return None
-        return np.asarray(self.model.booster_.predict(Xd, raw_score=True),
-                          dtype=np.float64)
+    def _model_outputs(self, Xd: np.ndarray) -> Optional[np.ndarray]:
+        """The raw model outputs being explained (per row), or None.
+
+        LightGBM: raw margin (log-odds) via booster.predict(raw_score=True).
+        sklearn models: predicted p(class=1) via predict_proba - there is no
+        margin output to explain, so the probability IS the explained output.
+        """
+        if self._is_lightgbm:
+            return np.asarray(self.model.booster_.predict(Xd, raw_score=True),
+                              dtype=np.float64)
+        if hasattr(self.model, "predict_proba"):
+            return np.asarray(self.model.predict_proba(Xd), dtype=np.float64)[:, 1]
+        return None
 
     # ------------------------------------------------------------ public
 
@@ -206,21 +234,23 @@ class ShapExplainer:
         X = self.builder.transform(norm_urls)
         Xd = X.toarray().astype(np.float64)
         shap_matrix, base = self._compute_shap(Xd)
-        margins = self._raw_margins(Xd)
+        outputs = self._model_outputs(Xd)
 
         results: List[UrlExplanation] = []
         for i, url in enumerate(norm_urls):
             phi = shap_matrix[i]
             total = float(phi.sum())
-            if margins is not None:
-                margin = float(margins[i])
-                recon = abs(base[i] + total - margin)
-                if recon > RECONSTRUCTION_WARN_TOL:
+            if outputs is not None:
+                output = float(outputs[i])
+                recon = abs(base[i] + total - output)
+                tol = (RECONSTRUCTION_WARN_TOL if self.space == "log-odds"
+                       else PROB_RECONSTRUCTION_WARN_TOL)
+                if recon > tol:
                     logger.warning("SHAP reconstruction mismatch for %r: %.4f "
-                                   "(possible backend space mismatch)",
-                                   sanitize_url_for_logging(url), recon)
+                                   "(%s space; deviation reported, not hidden)",
+                                   sanitize_url_for_logging(url), recon, self.space)
             else:
-                margin, recon = None, None
+                output, recon = None, None
 
             contribs: List[FeatureContribution] = []
             for j in range(self._n_features):
@@ -241,12 +271,13 @@ class ShapExplainer:
                 url=sanitize_url_for_logging(url),  # reported URL is sanitized
                 backend=self.backend,
                 base_value=float(base[i]),
-                raw_margin=margin,
+                raw_margin=output,
                 reconstruction_error=recon,
                 lexical_total=float(phi[:DENSE_COUNT].sum()),
                 ngram_total=float(phi[DENSE_COUNT:].sum()),
                 increasing=[c for c in contribs if c.shap > 0][:k],
                 decreasing=[c for c in contribs if c.shap < 0][:k],
+                space=self.space,
             ))
         return results
 
@@ -290,12 +321,13 @@ if __name__ == "__main__":  # demo: python -m services.shap_service <urls...>
             print(f"URL            {exp.url}")
             print(f"PROBABILITY    {proba:.4f} (calibrated)    "
                   f"VERDICT: {verdict} (threshold {threshold:.4f})")
-            print(f"MODEL          {model_name} | backend: {exp.backend_label}")
+            print(f"MODEL          {model_name} | backend: {exp.backend_label} | "
+                  f"space: {exp.space}")
             if exp.raw_margin is not None:
-                print(f"MARGIN         raw={exp.raw_margin:+.4f}  base={exp.base_value:+.4f}  "
+                print(f"OUTPUT         {exp.raw_margin:+.4f}  base={exp.base_value:+.4f}  "
                       f"reconstruction error={exp.reconstruction_error:.2e}")
             print(f"EVIDENCE       lexical {exp.lexical_total:+.4f} | "
-                  f"character n-grams {exp.ngram_total:+.4f}  (log-odds space)")
+                  f"character n-grams {exp.ngram_total:+.4f}  ({exp.space} space)")
             print()
             print("FEATURES INCREASING PHISHING RISK")
             for c in exp.increasing or [None]:

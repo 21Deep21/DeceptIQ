@@ -46,23 +46,25 @@ def test_root_serves_page(client):
     assert b"html" in r.data.lower()
 
 
-def test_health_online(client):
+def test_health_online(client, service):
     r = client.get("/health")
     assert r.status_code == 200
     body = r.get_json()
     assert body["status"] == "online"
-    assert body["model"] == "lightgbm"
-    assert body["threshold"] == pytest.approx(0.7833, abs=1e-3)
+    assert body["model"] == service.model_name
+    assert body["threshold"] == pytest.approx(service.threshold, abs=1e-9)
     assert body["cache"]["entries"] >= 0
 
 
-def test_api_model_info(client):
+def test_api_model_info(client, service):
     r = client.get("/api/model-info")
     assert r.status_code == 200
     body = r.get_json()
-    assert body["model"]["name"] == "lightgbm"
-    assert body["threshold"]["deployed"] == pytest.approx(0.7833, abs=1e-3)
-    assert body["test_results"]["calibrated_at_threshold"]["recall"] == pytest.approx(0.997, abs=1e-3)
+    assert body["model"]["name"] == service.model_name
+    assert body["threshold"]["deployed"] == pytest.approx(service.threshold, abs=1e-9)
+    meta = json.loads(Path("model/metadata.json").read_text())
+    expected = meta["test_results"]["calibrated_at_threshold"]["recall"]
+    assert body["test_results"]["calibrated_at_threshold"]["recall"] == pytest.approx(expected, abs=1e-6)
     assert "final" in body["dataset"]
 
 

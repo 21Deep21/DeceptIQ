@@ -5,7 +5,7 @@ def test_record_and_list_roundtrip(tmp_path):
     store = ScanStore(str(tmp_path / "scans.db"))
     scan_id, scanned_at = store.record(
         url="https://example.com/login", verdict="phishing", probability=0.9123,
-        severity="CRITICAL", threshold=0.7833, model_version="lightgbm@2026",
+        severity="CRITICAL", threshold=0.5, model_version="testmodel@1",
         shap_backend="shap",
         top_shap={"increasing": [{"feature": "has_ip_hostname", "contribution": 0.26}],
                   "decreasing": []},
@@ -20,7 +20,7 @@ def test_record_and_list_roundtrip(tmp_path):
     assert row["verdict"] == "phishing"
     assert row["probability"] == 0.9123
     assert row["severity"] == "CRITICAL"
-    assert row["threshold"] == 0.7833
+    assert row["threshold"] == 0.5
     assert row["top_shap"]["increasing"][0]["feature"] == "has_ip_hostname"
     assert row["ioc"]["components"]["host"] == "example.com"
 

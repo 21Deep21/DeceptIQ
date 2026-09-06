@@ -224,7 +224,7 @@ function renderDecon(ioc) {
 
 function renderShap(sh) {
   $("#shap-meta").textContent =
-    `base ${fmtVal(sh.base_value, 3)} · margin ${fmtVal(sh.raw_margin, 3)} · lexical ${fmtVal(sh.lexical_total, 2)} · n-grams ${fmtVal(sh.ngram_total, 2)}`;
+    `base ${fmtVal(sh.base_value, 3)} · output ${fmtVal(sh.raw_margin, 3)} · lexical ${fmtVal(sh.lexical_total, 2)} · n-grams ${fmtVal(sh.ngram_total, 2)}`;
   const all = [...(sh.increasing || []), ...(sh.decreasing || [])];
   const maxC = Math.max(1e-9, ...all.map((x) => Math.abs(Number(x.contribution))));
   const rows = (list) => {

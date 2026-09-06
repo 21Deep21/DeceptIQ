@@ -1,0 +1,4 @@
+url,label,source,threat_type,registrable_domain,calibrated_probability,predicted_label
+https://spacea.previewship.net/,1,openphish,phishing,previewship.net,0.042295,0
+https://elxxvvx.xyz/i,1,urlhaus,malware_distribution,elxxvvx.xyz,0.386645,0
+https://cqylt.net/?e=v,1,urlhaus,malware_distribution,cqylt.net,0.000553,0

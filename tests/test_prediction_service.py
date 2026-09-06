@@ -47,8 +47,8 @@ def test_predict_safe_url_fields(service):
     r = service.predict("https://example.com/")
     assert r["verdict"] == "safe"
     assert 0.0 <= r["probability"] < r["threshold"]
-    assert r["threshold"] == pytest.approx(0.7833, abs=1e-3)
-    assert r["model"]["name"] == "lightgbm"
+    assert r["threshold"] == pytest.approx(service.threshold, abs=1e-9)
+    assert r["model"]["name"] == service.model_name
     assert r["model"]["probability_is_calibrated"] is True
     assert r["shap"]["increasing"] and r["shap"]["decreasing"]
     assert r["ioc"]["components"]["registrable_domain"] == "example.com"

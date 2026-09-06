@@ -61,17 +61,26 @@ logger = logging.getLogger(__name__)
 PR_SAMPLE_MAX = 200
 
 SELECTION_RATIONALE = (
-    "LightGBM selected from the Phase 2 comparison. Measured grouped CV on the "
-    "train split: recall 0.9980 (+/-0.0024), precision 0.9980 (+/-0.0024), F1 "
-    "0.9980, ROC-AUC 0.9998, PR-AUC 0.9999 - tied-best CV recall with CatBoost "
-    "(0.9980) and above XGBoost (0.9967), LogReg (0.9950), RandomForest (0.9924). "
-    "Validation at threshold 0.5 was perfect (tn=993 fp=0 fn=0 tp=1000). Chosen "
-    "over CatBoost for ~6x faster fitting/inference (1.2-1.6s vs 7.9-9.7s per "
-    "fit), which matters for the web application, and for straightforward SHAP "
-    "TreeExplainer support. The stacking ensemble was NOT retained: validation "
-    "performance was identical (saturated) while adding 4 base models, higher "
-    "latency and harder explainability - the project spec requires complexity "
-    "to be justified by measured benefit, which it was not."
+    "Random Forest selected from the Phase 2R comparison on dataset revision 1R "
+    "(benign class: 2,335 observed sitemap deep-link URLs + 2,665 constructed "
+    "homepages). Measured grouped 5-fold CV on the train split: recall 0.9862 "
+    "(+/-0.0087), precision 0.9757 (+/-0.0392), F1 0.9804, ROC-AUC 0.9977, "
+    "PR-AUC 0.9977 - best CV F1 among individual models. Validation at threshold "
+    "0.5: accuracy 0.9736, precision 0.9657, recall 0.9821, F1 0.9738, confusion "
+    "tn=973 fp=35 fn=18 tp=985 - the most balanced operational profile, already "
+    "satisfying the deployment policy (recall>=0.97, precision>=0.90) at the "
+    "default threshold. The stacking ensemble was evaluated and NOT retained: "
+    "validation PR-AUC 0.9967 vs 0.9966 for Random Forest (delta 0.0001, "
+    "noise-level) with identical F1, while adding four base models, a "
+    "meta-learner and far harder SHAP explainability. LightGBM (the v1 "
+    "selection) was demoted: after the benign deep-link fix its 0.5-threshold "
+    "precision collapsed (CV 0.8811, validation 0.8853, fp=129) - it over-triggers "
+    "on legitimate URLs with paths; Random Forest dominates it on CV and "
+    "validation F1. CatBoost had the best CV PR-AUC (0.9981) but lower validation "
+    "F1 (0.9565) and ~10x slower fitting. Note: with a sklearn RandomForest raw "
+    "model, shap.TreeExplainer is the single SHAP backend (the LightGBM-native "
+    "pred_contrib fallback applies to LightGBM pipelines only); the active "
+    "backend is reported in every explanation."
 )
 
 
@@ -234,8 +243,8 @@ def _check_against_phase2(metrics_path: Path, selected: str,
     if row.empty:
         logger.warning("no Phase 2 validation row for %s - cannot cross-check", selected)
         return
-    phase2_f1 = float(row.iloc[0]["f1"])
-    now_f1 = float(val_metrics["f1"])
+    phase2_f1 = round(float(row.iloc[0]["f1"]), 4)  # CSV stores 4-decimal precision
+    now_f1 = round(float(val_metrics["f1"]), 4)
     if abs(phase2_f1 - now_f1) <= 1e-6:
         logger.info("integrity check OK: validation F1 reproduces the Phase 2 "
                     "recorded value (%.4f)", now_f1)

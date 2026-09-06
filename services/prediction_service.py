@@ -272,12 +272,23 @@ class PredictionService:
             probability = float(proba)
             ioc = extract_iocs(url)
             shap = explanation.to_dict()
-            shap["note"] = (
-                "SHAP values are exact TreeSHAP log-odds contributions of the raw "
-                "model (not probabilities). Positive contributions increase "
-                "phishing risk, negative contributions reduce it. The verdict is "
-                "decided by the calibrated probability and the deployed threshold."
-            )
+            if shap.get("space") == "probability":
+                shap["note"] = (
+                    "SHAP values are exact TreeSHAP contributions to the raw "
+                    "model's predicted phishing probability (sklearn RandomForest "
+                    "has no log-odds margin output, so probability is the explained "
+                    "output). They are model evidence, NOT the calibrated "
+                    "probability itself. Positive contributions increase phishing "
+                    "risk, negative contributions reduce it. The verdict is decided "
+                    "by the calibrated probability and the deployed threshold."
+                )
+            else:
+                shap["note"] = (
+                    "SHAP values are exact TreeSHAP log-odds contributions of the "
+                    "raw model (not probabilities). Positive contributions increase "
+                    "phishing risk, negative contributions reduce it. The verdict is "
+                    "decided by the calibrated probability and the deployed threshold."
+                )
             cores.append({
                 "url": ioc["components"]["url"],  # sanitized (credentials redacted)
                 "probability": probability,

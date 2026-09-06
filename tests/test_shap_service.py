@@ -100,3 +100,29 @@ def test_explanation_url_is_sanitized(tiny_model):
     assert "secretpw" not in e.url
     assert "[REDACTED]" in e.url
     assert "secretpw" not in str(e.to_dict())
+
+
+def test_sklearn_rf_shap_backend_probability_space():
+    """Regression (Phase 3R): sklearn RandomForest TreeExplainer returns
+    per-class shap_values shaped (n, m, 2) and explains PROBABILITIES (no
+    log-odds margin). Must reduce to the positive class, reconstruct against
+    predict_proba, and report space='probability'."""
+    from sklearn.ensemble import RandomForestClassifier
+
+    X, y = _corpus()
+    pipe = Pipeline([
+        ("features", URLFeatureBuilder()),
+        ("model", RandomForestClassifier(n_estimators=25, random_state=0, n_jobs=1)),
+    ])
+    pipe.fit(X, y)
+    ex = ShapExplainer(pipe, backend="shap")
+    assert ex.backend == "shap"
+    assert ex.space == "probability"
+    mal, ben = ex.explain([X[0], X[-1]])  # previously raised: 3D shape error
+
+    p_mal = pipe.predict_proba([X[0]])[0, 1]
+    assert mal.reconstruction_error is not None
+    assert abs((mal.base_value + mal.lexical_total + mal.ngram_total) - p_mal) < 0.1
+    assert (mal.lexical_total + mal.ngram_total) > 0   # evidence direction
+    assert (ben.lexical_total + ben.ngram_total) < 0
+    assert mal.to_dict()["space"] == "probability"
