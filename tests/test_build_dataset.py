@@ -8,8 +8,8 @@ def _e(url, label, source="openphish", threat_type="phishing"):
 def test_clean_normalizes_dedups_and_drops_malformed():
     entries = [
         _e("https://evil.example.com/login", 1),
-        _e("  https://evil.example.com/login  ", 1),  # duplicate after normalization
-        _e("ht!tp://bad url", 1),  # malformed
+        _e("  https://evil.example.com/login  ", 1),
+        _e("ht!tp://bad url", 1),
         _e("https://good.example.com/", 0, source="tranco", threat_type="benign"),
         _e("https://good.example.com/", 0, source="tranco", threat_type="benign"),
     ]
@@ -44,43 +44,62 @@ def test_clean_extracts_registrable_domain():
 
 
 def test_clean_drops_hosts_without_registrable_domain():
-    # '.example' is a reserved TLD name but NOT in the Public Suffix List,
-    # so no registrable domain exists and the row is dropped by design.
-    # The live feed run dropped 31 rows for the same reason (bare public
-    # suffixes such as niigata.jp, act.edu.au) - this locks that behavior.
     cleaned, stats = clean_entries([_e("http://host.example/page", 1)])
     assert cleaned == []
     assert stats["malformed_removed"] == 1
 
 
-def test_domain_cap_limits_per_domain():
-    # NOTE: evil.example.com and other.example.com would SHARE the
-    # registrable domain example.com - use .com/.org for distinct groups.
-    # apply_domain_cap operates on POST-CLEANING records (contract:
-    # records carry registrable_domain).
-    entries = [_e(f"https://evil.example.com/p{i}", 1) for i in range(6)]
-    entries += [_e(f"https://evil.example.org/p{i}", 1) for i in range(2)]
-    cleaned, _ = clean_entries(entries)
-    assert len(cleaned) == 8
-    kept, dropped = apply_domain_cap(cleaned, cap=2)
-    assert len(kept) == 4  # 2 from each registrable domain
+def test_domain_cap_is_per_label():
+    mal = [_e(f"https://evil.example.com/p{i}", 1) for i in range(4)]
+    ben = [_e(f"https://docs.example.org/g{i}", 1) for i in range(0)]  # placeholder, replaced below
+    ben = [_e(f"https://docs.example.org/g{i}", 0, source="sitemap", threat_type="benign")
+           for i in range(5)]
+    entries, _ = clean_entries(mal + ben)
+    kept, dropped = apply_domain_cap(entries, benign_cap=3, malicious_cap=2)
+    assert len([e for e in kept if e["label"] == 1]) == 2
+    assert len([e for e in kept if e["label"] == 0]) == 3
     assert dropped == 4
+
+
+def test_sample_balanced_benign_mix():
+    obs = [_e(f"https://s{i}.example.com/page{i}", 0, source="sitemap", threat_type="benign")
+           for i in range(20)]
+    const = [_e(f"https://c{i}.example.com/", 0, source="tranco", threat_type="benign")
+             for i in range(20)]
+    mal = [_e(f"https://m{i}.example.net/x", 1) for i in range(20)]
+    sel, stats = sample_balanced(mal + obs + const, 10, 10, seed=3, benign_observed_frac=0.5)
+    assert stats["malicious_selected"] == 10
+    assert stats["benign_observed_selected"] == 5
+    assert stats["benign_constructed_selected"] == 5
+    sources = {e["source"] for e in sel if e["label"] == 0}
+    assert sources == {"sitemap", "tranco"}
+
+
+def test_sample_balanced_mix_tops_up_when_observed_short():
+    obs = [_e("https://s.example.com/p", 0, source="sitemap", threat_type="benign")]
+    const = [_e(f"https://c{i}.example.com/", 0, source="tranco", threat_type="benign")
+             for i in range(20)]
+    sel, stats = sample_balanced(obs + const, 0, 10, seed=1, benign_observed_frac=0.5)
+    # topped up with REAL constructed benign data - never fabricated
+    assert stats["benign_observed_selected"] == 1
+    assert stats["benign_constructed_selected"] == 9
+    assert stats["benign_selected"] == 10
 
 
 def test_sample_balanced_is_seed_deterministic():
     entries = (
         [_e(f"https://m{i}.example.com/x", 1) for i in range(30)]
-        + [_e(f"https://l{i}.example.com/", 0, source="tranco", threat_type="benign") for i in range(30)]
+        + [_e(f"https://l{i}.example.com/", 0, source="tranco", threat_type="benign")
+           for i in range(30)]
     )
-    a, sa = sample_balanced(entries, 10, 10, seed=7)
-    b, _ = sample_balanced(entries, 10, 10, seed=7)
-    assert sa["malicious_selected"] == 10 and sa["benign_selected"] == 10
+    a, _ = sample_balanced(entries, 10, 10, seed=7, benign_observed_frac=0.5)
+    b, _ = sample_balanced(entries, 10, 10, seed=7, benign_observed_frac=0.5)
     assert [e["url"] for e in a] == [e["url"] for e in b]
 
 
 def test_sample_balanced_never_fabricates():
     entries = [_e("https://only.example.com/x", 1)]
-    result, stats = sample_balanced(entries, 10, 10, seed=1)
+    result, stats = sample_balanced(entries, 10, 10, seed=1, benign_observed_frac=0.5)
     assert stats["malicious_selected"] == 1
     assert stats["benign_selected"] == 0
     assert len(result) == 1

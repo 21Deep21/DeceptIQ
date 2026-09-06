@@ -1,0 +1,14 @@
+model,stage,n_folds,threshold,trained_at,accuracy,precision,recall,f1,roc_auc,pr_auc,accuracy_std,precision_std,recall_std,f1_std,roc_auc_std,pr_auc_std,tn,fp,fn,tp,notes,brier,ece
+logreg,cv,5.0,0.5,2026-09-04T07:45:57+00:00,0.9967,0.9983,0.995,0.9967,0.9999,0.9999,0.0012,0.0015,0.0026,0.0012,0.0002,0.0001,,,,,mean+std over grouped folds (train split only),,
+logreg,validation,,0.5,2026-09-04T07:45:57+00:00,0.9995,1.0,0.999,0.9995,1.0,1.0,,,,,,,993.0,0.0,1.0,999.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+random_forest,cv,5.0,0.5,2026-09-04T07:45:57+00:00,0.9957,0.999,0.9924,0.9957,1.0,1.0,0.0021,0.0008,0.0039,0.0021,0.0,0.0,,,,,mean+std over grouped folds (train split only),,
+random_forest,validation,,0.5,2026-09-04T07:45:57+00:00,1.0,1.0,1.0,1.0,1.0,1.0,,,,,,,993.0,0.0,0.0,1000.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+xgboost,cv,5.0,0.5,2026-09-04T07:45:57+00:00,0.9975,0.9983,0.9967,0.9975,0.9997,0.9998,0.0017,0.0015,0.0042,0.0018,0.0005,0.0003,,,,,mean+std over grouped folds (train split only),,
+xgboost,validation,,0.5,2026-09-04T07:45:57+00:00,0.9995,1.0,0.999,0.9995,1.0,1.0,,,,,,,993.0,0.0,1.0,999.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+lightgbm,cv,5.0,0.5,2026-09-04T07:45:57+00:00,0.998,0.998,0.998,0.998,0.9998,0.9999,0.0011,0.0024,0.0024,0.0011,0.0004,0.0003,,,,,mean+std over grouped folds (train split only),,
+lightgbm,validation,,0.5,2026-09-04T07:45:57+00:00,1.0,1.0,1.0,1.0,1.0,1.0,,,,,,,993.0,0.0,0.0,1000.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+catboost,cv,5.0,0.5,2026-09-04T07:45:57+00:00,0.9982,0.9983,0.998,0.9982,0.9998,0.9999,0.001,0.0018,0.0027,0.001,0.0003,0.0002,,,,,mean+std over grouped folds (train split only),,
+catboost,validation,,0.5,2026-09-04T07:45:57+00:00,0.9995,0.999,1.0,0.9995,1.0,1.0,,,,,,,992.0,1.0,0.0,1000.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+stacking,validation,,0.5,2026-09-04T07:45:57+00:00,1.0,1.0,1.0,1.0,1.0,1.0,,,,,,,993.0,0.0,0.0,1000.0,"grouped stacking: meta=logreg on out-of-fold base probabilities; no outer CV (computational cost, documented); threshold 0.5",,
+lightgbm+calibrated,test,,0.7833,2026-09-04T08:02:31+00:00,0.9985,1.0,0.997,0.9985,0.9991,0.9995,,,,,,,994.0,0.0,3.0,986.0,ONE-TIME final test evaluation: calibrated model at deployed threshold,0.0012,0.0012
+lightgbm_raw,test,,0.5,2026-09-04T08:02:31+00:00,0.9985,1.0,0.997,0.9985,0.9991,0.9995,,,,,,,994.0,0.0,3.0,986.0,ONE-TIME final test evaluation: raw model at default 0.5 (reference),0.0012,0.0013

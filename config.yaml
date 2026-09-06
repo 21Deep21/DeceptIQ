@@ -4,7 +4,7 @@
 
 application:
   name: phishing-url-analyzer
-  version: 0.7.0
+  version: 0.8.0
 
 server:
   host: 127.0.0.1
@@ -22,23 +22,23 @@ paths:
   alert_log_path: data/alerts.log
 
 api:
-  rate_limit: "30 per minute"        # per client IP (flask-limiter)
+  rate_limit: "30 per minute"
   batch_limit: 50
   history_default_limit: 50
   history_max_limit: 500
   request_body_max_bytes: 65536
 
 cache:
-  max_entries: 512                   # bounded LRU, keyed by normalized URL
+  max_entries: 512
 
-severity:                            # calibrated-probability bands (verdict-independent)
+severity:
   low_max: 0.25
   medium_max: 0.60
   high_max: 0.90
 
 enrichment:
-  enabled_by_default: false          # WHOIS/DNS per request is opt-in (latency)
-  include_external_by_default: false # VirusTotal cross-check is opt-in too
+  enabled_by_default: false
+  include_external_by_default: false
 
 history:
   top_shap_increasing: 5
@@ -58,26 +58,209 @@ logging:
   backup_count: 3
 
 virustotal:
-  enabled: true                      # feature switch; ALSO needs VT_API_KEY
+  enabled: true
   base_url: https://www.virustotal.com/api/v3
   timeout_seconds: 8
-  min_request_interval_seconds: 15   # local throttle: free tier = 4 req/min
+  min_request_interval_seconds: 15
   note: >
     External intelligence cross-check, reported separately from the local
     ML verdict and never used for the classification decision. LOOKUP
-    ONLY: URLs are never submitted to VirusTotal for scanning, so the
-    service never triggers a visit of the analyzed URL. Requires the
-    VT_API_KEY environment variable; without it the feature reports
-    'disabled' and the application works fully. VirusTotal results are
-    third-party engine opinions, NOT ground truth.
+    ONLY: URLs are never submitted to VirusTotal for scanning. Requires
+    the VT_API_KEY environment variable; without it the feature reports
+    'disabled' and the application works fully. Not ground truth.
 
 dataset:
   random_seed: 42
   target_phishing: 5000
   target_legitimate: 5000
-  max_urls_per_domain: 5
+  benign_observed_frac: 0.5            # share of benign target from observed (sitemap) URLs
+  max_urls_per_domain_malicious: 5
+  max_urls_per_domain_benign: 25
   legitimate_domain_pool: 100000
   phishtank_csv: data/raw/phishtank.csv
+
+# Phase 1R benign deep-URL source: public sitemaps of curated reputable
+# organizations. We request ONLY robots.txt and the sitemap files it
+# declares (bounded, polite); the page URLs inside are dataset strings
+# and are NEVER visited. Per-source failures are reported, never hidden.
+sitemaps:
+  request_delay_seconds: 0.4
+  max_file_mb: 20
+  max_locs_per_file: 3000
+  max_urls_per_domain: 200
+  max_sitemap_files_per_domain: 3
+  max_children_per_index: 15
+  fallback_sitemap_paths: [sitemap.xml, sitemap_index.xml, sitemap-index.xml, sitemap.xml.gz]
+  domains:
+    - python.org
+    - docs.python.org
+    - pypi.org
+    - packaging.python.org
+    - github.com
+    - gitlab.com
+    - bitbucket.org
+    - stackoverflow.com
+    - serverfault.com
+    - superuser.com
+    - stackexchange.com
+    - mozilla.org
+    - developer.mozilla.org
+    - rust-lang.org
+    - go.dev
+    - nodejs.org
+    - php.net
+    - perl.org
+    - kernel.org
+    - gnu.org
+    - fsf.org
+    - apache.org
+    - freebsd.org
+    - openbsd.org
+    - netbsd.org
+    - debian.org
+    - ubuntu.com
+    - fedoraproject.org
+    - archlinux.org
+    - gentoo.org
+    - opensuse.org
+    - centos.org
+    - rockylinux.org
+    - almalinux.org
+    - sourceforge.net
+    - mysql.com
+    - postgresql.org
+    - sqlite.org
+    - mongodb.com
+    - redis.io
+    - nginx.com
+    - haproxy.org
+    - docker.com
+    - kubernetes.io
+    - terraform.io
+    - grafana.com
+    - elastic.co
+    - rabbitmq.com
+    - djangoproject.com
+    - flask.palletsprojects.com
+    - fastapi.tiangolo.com
+    - numpy.org
+    - scipy.org
+    - pandas.pydata.org
+    - matplotlib.org
+    - jupyter.org
+    - pytorch.org
+    - tensorflow.org
+    - scikit-learn.org
+    - cloudflare.com
+    - akamai.com
+    - cisco.com
+    - ibm.com
+    - microsoft.com
+    - apple.com
+    - adobe.com
+    - intel.com
+    - amd.com
+    - nvidia.com
+    - redhat.com
+    - dell.com
+    - hp.com
+    - lenovo.com
+    - mit.edu
+    - stanford.edu
+    - berkeley.edu
+    - cmu.edu
+    - caltech.edu
+    - princeton.edu
+    - yale.edu
+    - harvard.edu
+    - columbia.edu
+    - cornell.edu
+    - upenn.edu
+    - brown.edu
+    - dartmouth.edu
+    - northwestern.edu
+    - uchicago.edu
+    - nyu.edu
+    - gatech.edu
+    - purdue.edu
+    - wisc.edu
+    - umich.edu
+    - utexas.edu
+    - ucla.edu
+    - ucsd.edu
+    - ox.ac.uk
+    - cam.ac.uk
+    - imperial.ac.uk
+    - ed.ac.uk
+    - ucl.ac.uk
+    - lse.ac.uk
+    - ethz.ch
+    - epfl.ch
+    - tum.de
+    - ku-leuven.be
+    - kth.se
+    - uio.no
+    - dtu.dk
+    - aalto.fi
+    - nus.edu.sg
+    - ntu.edu.sg
+    - iitb.ac.in
+    - iitd.ac.in
+    - iisc.ac.in
+    - iitm.ac.in
+    - iitk.ac.in
+    - unimelb.edu.au
+    - sydney.edu.au
+    - auckland.ac.nz
+    - utoronto.ca
+    - mcgill.ca
+    - ubc.ca
+    - gov.uk
+    - usa.gov
+    - canada.ca
+    - europa.eu
+    - un.org
+    - who.int
+    - nasa.gov
+    - nih.gov
+    - cdc.gov
+    - noaa.gov
+    - usgs.gov
+    - nist.gov
+    - loc.gov
+    - archive.org
+    - weather.gov
+    - fda.gov
+    - ietf.org
+    - iana.org
+    - w3.org
+    - iso.org
+    - ieee.org
+    - acm.org
+    - arxiv.org
+    - nature.com
+    - springer.com
+    - ncbi.nlm.nih.gov
+    - plos.org
+    - wikipedia.org
+    - wikimedia.org
+    - britannica.com
+    - gutenberg.org
+    - openstreetmap.org
+    - creativecommons.org
+    - eff.org
+    - letsencrypt.org
+    - torproject.org
+    - bbc.com
+    - npr.org
+    - pbs.org
+    - apnews.com
+    - theguardian.com
+    - dw.com
+    - aljazeera.com
+    - france24.com
+    - cnet.com
+    - arstechnica.com
 
 sources:
   openphish_feed_url: https://openphish.com/feed.txt
@@ -96,7 +279,7 @@ features:
 
 explainability:
   top_k_features: 10
-  shap_backend: auto        # auto | shap | native
+  shap_backend: auto
   ioc:
     long_path_chars: 100
     many_query_params: 5
@@ -105,7 +288,7 @@ explainability:
     max_encoded_samples: 5
 
 network:
-  user_agent: "phishing-url-analyzer/0.7.0 (MCA academic research project; defensive URL analysis)"
+  user_agent: "phishing-url-analyzer/0.8.0 (MCA academic research project; defensive URL analysis)"
   feed_connect_timeout: 10
   feed_read_timeout: 60
   feed_retries: 3

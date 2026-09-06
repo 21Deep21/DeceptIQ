@@ -34,6 +34,7 @@ from typing import Any, Dict, List, Tuple
 import requests
 
 from appconfig import get_config, setup_console_logging
+from dataset.sitemap_sources import collect_sitemap_urls
 
 logger = logging.getLogger(__name__)
 
@@ -338,6 +339,29 @@ def collect_entries(cfg: Dict[str, Any]) -> Tuple[List[Dict[str, Any]], Dict[str
         except Exception as exc2:
             report["sources"]["majestic"] = {"status": "failed", "reason": f"{type(exc2).__name__}: {exc2}"[:300]}
 
+    # Phase 1R: real benign URLs WITH paths from public sitemaps of curated
+    # reputable domains (robots.txt discovery; only robots.txt and sitemap
+    # files are fetched - the page URLs inside are NEVER requested).
+    try:
+        sitemap_entries, sm_report = collect_sitemap_urls(cfg, session)
+        legit.extend(sitemap_entries)
+        report["sources"]["sitemap"] = {
+            "status": "ok" if sitemap_entries else "failed",
+            "raw_records": sm_report["urls_collected"],
+            "domains_ok": sm_report["domains_ok"],
+            "domains_failed": sm_report["domains_failed"],
+        }
+        if sitemap_entries:
+            _save_raw(cfg, "sitemap_urls.txt",
+                      "\n".join(e["url"] for e in sitemap_entries) + "\n")
+        logger.info("sitemap source: %d benign URLs from %d/%d domains",
+                    sm_report["urls_collected"], sm_report["domains_ok"],
+                    sm_report["domains_total"])
+    except Exception as exc:
+        report["sources"]["sitemap"] = {
+            "status": "failed", "reason": f"{type(exc).__name__}: {exc}"[:300]}
+        logger.warning("sitemap collection unavailable: %s", exc)
+
     return malicious + legit, report
 
 
@@ -357,10 +381,16 @@ def log_report(stats: Dict[str, Any]) -> None:
     logger.info("dropped_by_domain_cap=%d", stats["dropped_by_domain_cap"])
     s = stats["sampling"]
     logger.info(
+        "benign composition: observed(sitemap)=%d constructed(homepage)=%d (actual observed frac %.2f)",
+        s.get("benign_observed_selected", 0), s.get("benign_constructed_selected", 0),
+        s.get("actual_observed_frac", 0.0),
+    )
+    logger.info(
         "selected: malicious=%d benign=%d (targets: %d/%d, available: %d/%d)",
         s["malicious_selected"], s["benign_selected"],
         stats["config"]["target_phishing"], stats["config"]["target_legitimate"],
-        s["malicious_available"], s["benign_available"],
+        s["malicious_available"],
+        s.get("benign_observed_available", 0) + s.get("benign_constructed_available", 0),
     )
     logger.info(
         "final: total=%d labels=%s sources=%s threat_types=%s unique_domains=%d",

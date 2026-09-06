@@ -1,22 +1,26 @@
-"""Dataset cleaning, normalization, balancing, and persistence (Phase 1).
+"""Dataset cleaning, normalization, balancing, and persistence.
 
-Pipeline (offline once raw feeds are on disk):
-  1. normalize every URL (features/url_utils.normalize_url)
-  2. drop malformed URLs (counted and reported - never a crash)
-  3. extract the registrable domain (tldextract); hosts without one dropped
-  4. exact-URL dedup; on cross-label duplicates the MALICIOUS label wins
-     (the threat feed is authoritative for that exact URL)
-  5. per-(class, domain) URL cap for domain diversity
-  6. seeded class balancing to target sizes - ALL available records are
-     used when fewer than target exist; counts reported, never padded
-  7. seeded shuffle; write urls.csv + dataset_stats.json
+PHASE 1R (dataset revision): the benign class is a documented MIX of
+  * observed URLs   - real page URLs harvested from public sitemaps of
+                      curated reputable organizations (source 'sitemap'),
+                      carrying real paths/queries; and
+  * constructed URLs - 'https://<domain>/' homepages from ranking lists
+                      (source 'tranco'/'majestic').
+Rationale (measured SHAP evidence): the original benign class contained
+ONLY constructed homepages, so 'any path implies malice' became a
+near-decisive feature. Mixing real deep links into the benign class
+counters this source bias. Nothing is fabricated - both pools are real
+URLs from legitimate sources, and the ACTUAL mix ratio is reported.
 
-DOMAIN-LEVEL LEAKAGE: registrable_domain is the GROUPING VARIABLE for
-the domain-aware train/test split and StratifiedGroupKFold CV in Phase
-2. Random URL-level splitting would put different URLs of the same
-domain into both train and test (e.g. evil-example.com/login in train,
-evil-example.com/account in test) and inflate performance. Grouped
-splitting prevents this.
+Pipeline: normalize -> drop malformed -> registrable-domain extraction
+-> exact-URL dedup (malicious label wins conflicts) -> per-label domain
+caps (malicious 5 / benign 25, configurable) -> seeded class balancing
+with the benign mix -> seeded shuffle -> urls.csv + dataset_stats.json.
+
+DOMAIN-LEVEL LEAKAGE: registrable_domain remains the grouping variable
+for domain-aware splitting / StratifiedGroupKFold (Phase 2R) - random
+URL-level splitting would leak domains across train/test and inflate
+performance.
 """
 
 from __future__ import annotations
@@ -36,6 +40,8 @@ from features.url_utils import MalformedURLError, extract_registrable_domain, no
 logger = logging.getLogger(__name__)
 
 CSV_COLUMNS = ["url", "label", "source", "threat_type", "registrable_domain"]
+OBSERVED_BENIGN_SOURCES = {"sitemap"}
+CONSTRUCTED_BENIGN_SOURCES = {"tranco", "majestic"}
 
 
 def clean_entries(entries: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
@@ -81,15 +87,26 @@ def clean_entries(entries: List[Dict[str, Any]]) -> Tuple[List[Dict[str, Any]], 
     return cleaned, stats
 
 
-def apply_domain_cap(entries: List[Dict[str, Any]], cap: int) -> Tuple[List[Dict[str, Any]], int]:
-    """Keep at most `cap` URLs per (label, registrable_domain)."""
-    if cap <= 0:
-        return entries, 0
+def apply_domain_cap(entries: List[Dict[str, Any]], benign_cap: int,
+                     malicious_cap: int) -> Tuple[List[Dict[str, Any]], int]:
+    """Keep at most cap URLs per (label, registrable_domain).
+
+    Malicious cap stays tight (5): URLhaus spam-lists hundreds of URLs
+    per host, and a tight cap prevents host memorization. Benign cap is
+    higher (25): a reputable site genuinely has many real pages, and
+    grouped splitting already confines each domain to one fold.
+    """
+    caps = {0: int(benign_cap), 1: int(malicious_cap)}
     counts: Dict[str, int] = {}
     kept: List[Dict[str, Any]] = []
     dropped = 0
     for e in entries:
-        key = f"{int(e['label'])}|{e['registrable_domain']}"
+        label = int(e["label"])
+        cap = caps.get(label, 0)
+        if cap <= 0:
+            kept.append(e)
+            continue
+        key = f"{label}|{e['registrable_domain']}"
         counts[key] = counts.get(key, 0) + 1
         if counts[key] <= cap:
             kept.append(e)
@@ -98,41 +115,58 @@ def apply_domain_cap(entries: List[Dict[str, Any]], cap: int) -> Tuple[List[Dict
     return kept, dropped
 
 
-def sample_balanced(
-    entries: List[Dict[str, Any]], n_malicious: int, n_benign: int, seed: int
-) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
-    """Seeded balancing. Never fabricates: if fewer records exist than the
-    target, ALL of them are used and the shortfall is reported."""
+def sample_balanced(entries: List[Dict[str, Any]], n_malicious: int, n_benign: int,
+                    seed: int, benign_observed_frac: float = 0.5
+                    ) -> Tuple[List[Dict[str, Any]], Dict[str, Any]]:
+    """Seeded balancing with the documented benign mix.
+
+    The benign target is split between observed (sitemap) and constructed
+    (homepage) URLs at benign_observed_frac. If one pool is short, the
+    other REAL pool tops up (never fabrication); the actual ratio is
+    reported. Malicious shortfall is reported, never padded.
+    """
     rng = random.Random(seed)
     malicious = [e for e in entries if e["label"] == 1]
-    benign = [e for e in entries if e["label"] == 0]
-    n_mal = min(n_malicious, len(malicious))
-    n_ben = min(n_benign, len(benign))
+    benign_obs = [e for e in entries if e["label"] == 0
+                  and e["source"] in OBSERVED_BENIGN_SOURCES]
+    benign_const = [e for e in entries if e["label"] == 0
+                    and e["source"] not in OBSERVED_BENIGN_SOURCES]
+
+    n_mal = min(int(n_malicious), len(malicious))
+    n_obs = min(int(round(n_benign * benign_observed_frac)), len(benign_obs))
+    n_const = min(int(n_benign) - n_obs, len(benign_const))
     stats = {
         "malicious_available": len(malicious),
-        "benign_available": len(benign),
+        "benign_observed_available": len(benign_obs),
+        "benign_constructed_available": len(benign_const),
         "malicious_selected": n_mal,
-        "benign_selected": n_ben,
+        "benign_selected": n_obs + n_const,
+        "benign_observed_selected": n_obs,
+        "benign_constructed_selected": n_const,
+        "target_observed_frac": float(benign_observed_frac),
+        "actual_observed_frac": (n_obs / (n_obs + n_const)) if (n_obs + n_const) else 0.0,
     }
-    sel_mal = rng.sample(malicious, n_mal) if n_mal < len(malicious) else list(malicious)
-    sel_ben = rng.sample(benign, n_ben) if n_ben < len(benign) else list(benign)
-    result = sel_mal + sel_ben
-    rng.shuffle(result)
-    return result, stats
+    sel = rng.sample(malicious, n_mal) if n_mal < len(malicious) else list(malicious)
+    sel += rng.sample(benign_obs, n_obs) if n_obs < len(benign_obs) else list(benign_obs)
+    sel += rng.sample(benign_const, n_const) if n_const < len(benign_const) else list(benign_const)
+    rng.shuffle(sel)
+    return sel, stats
 
 
-def build_from_entries(
-    entries: List[Dict[str, Any]], cfg: Dict[str, Any], download_report: Dict[str, Any] = None
-) -> Dict[str, Any]:
+def build_from_entries(entries: List[Dict[str, Any]], cfg: Dict[str, Any],
+                       download_report: Dict[str, Any] = None) -> Dict[str, Any]:
     ds = cfg["dataset"]
     seed = int(ds["random_seed"])
     target_mal = int(ds["target_phishing"])
     target_ben = int(ds["target_legitimate"])
-    cap = int(ds["max_urls_per_domain"])
+    ben_frac = float(ds.get("benign_observed_frac", 0.5))
+    cap_mal = int(ds.get("max_urls_per_domain_malicious",
+                         ds.get("max_urls_per_domain", 5)))
+    cap_ben = int(ds.get("max_urls_per_domain_benign", 25))
 
     cleaned, cleaning_stats = clean_entries(entries)
-    capped, dropped_by_cap = apply_domain_cap(cleaned, cap)
-    final, sampling_stats = sample_balanced(capped, target_mal, target_ben, seed)
+    capped, dropped_by_cap = apply_domain_cap(cleaned, cap_ben, cap_mal)
+    final, sampling_stats = sample_balanced(capped, target_mal, target_ben, seed, ben_frac)
 
     df = pd.DataFrame(final, columns=CSV_COLUMNS)
     out_csv = Path(cfg["paths"]["processed_dataset_file"])
@@ -143,10 +177,13 @@ def build_from_entries(
     stats = {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "random_seed": seed,
+        "dataset_revision": "1R (benign mix: observed sitemap URLs + constructed homepages)",
         "config": {
             "target_phishing": target_mal,
             "target_legitimate": target_ben,
-            "max_urls_per_domain": cap,
+            "benign_observed_frac": ben_frac,
+            "max_urls_per_domain_malicious": cap_mal,
+            "max_urls_per_domain_benign": cap_ben,
             "legitimate_domain_pool": int(ds["legitimate_domain_pool"]),
         },
         "download_report": download_report or {},
@@ -176,18 +213,30 @@ def build_from_entries(
 
 def _notes(download_report: Dict[str, Any]) -> List[str]:
     notes = [
-        "Legitimate URLs are constructed as 'https://<domain>/' from domain ranking "
-        "lists (Tranco/Majestic publish domains, not URLs). Known bias: benign rows "
-        "carry no path/query content; path-based features will look stronger than on "
-        "real traffic. Documented as a dataset limitation.",
+        "DATASET REVISION 1R: the benign class is a documented mix of real deep-link "
+        "URLs harvested from public sitemaps of curated reputable organizations "
+        "(observed) and constructed 'https://<domain>/' homepages from ranking lists. "
+        "Rationale: the original benign class contained only constructed homepages, "
+        "which made 'presence of a path' a near-decisive malicious signal (measured "
+        "SHAP evidence, Phase 4). The mix counters this source bias.",
+        "SITEMAP HARVESTING (defensive): only robots.txt and the sitemap files it "
+        "declares were fetched (bounded, with politeness delays). The page URLs "
+        "inside the sitemaps are dataset strings and were NEVER requested, visited "
+        "or rendered. Per-domain failures are reported, never hidden.",
+        "Constructed benign homepages remain 'https://<domain>/' (ranking lists "
+        "publish domains, not URLs) - a disclosed transformation, not fabrication.",
         "URLhaus records are malware-distribution URLs, not strictly phishing. They "
         "are labelled malicious (1) with threat_type 'malware_distribution' to keep "
         "the distinction explicit.",
-        "registrable_domain is the grouping variable for domain-aware splitting in "
-        "Phase 2 (prevents same-domain train/test leakage).",
+        "registrable_domain is the grouping variable for domain-aware splitting "
+        "(prevents same-domain train/test leakage).",
         "URLs on legitimately ranked domains that appear in threat feeds (compromised "
         "hosts) are kept with their malicious label: the URL is malicious even when "
         "the domain is popular. Grouped splitting keeps such domains in one fold.",
+        "Known remaining source skews (documented, not hidden): benign URLs are "
+        "predominantly https and non-IP-hosted (modern reputable sites are), while "
+        "URLhaus URLs are predominantly http and IP-hosted. These remain "
+        "real-world-plausible but also source-correlated signals.",
     ]
     for name, info in (download_report or {}).get("sources", {}).items():
         if isinstance(info, dict) and info.get("status") in ("failed", "skipped"):
@@ -228,6 +277,13 @@ def main() -> int:
                     int(ds["legitimate_domain_pool"]), rng,
                 )
             )
+    sm = raw_dir / "sitemap_urls.txt"
+    if sm.exists():
+        for line in sm.read_text(encoding="utf-8", errors="replace").splitlines():
+            u = line.strip()
+            if u:
+                entries.append({"url": u, "label": 0, "source": "sitemap",
+                                "threat_type": "benign"})
     if not entries:
         logger.error("no raw feed files in %s - run 'python -m dataset.download_data' first", raw_dir)
         return 1
