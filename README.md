@@ -892,3 +892,7 @@ Seeds fixed (42); frozen splits with manifest; pinned lockfile
 - **UI v1.1**: traffic-light risk colours (green/yellow/red across the score
   number, score bar, severity badges, IOC warnings, deconstruction highlights),
   SHAP legend and explanation-space label.
+
+## AI-assistant / collaborator handoff
+
+Read `PROJECT_CONTEXT.md` first - it is the authoritative state + facts ledger + working rules for anyone (human or AI) continuing this project.
