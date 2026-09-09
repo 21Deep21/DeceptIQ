@@ -45,3 +45,36 @@ def test_builder_is_cloneable():
     c = clone(b)
     assert c.scale_dense is True
     assert not hasattr(c, "tfidf_")  # clone must be unfitted
+
+
+def test_feature_mode_lexical_only():
+    b = URLFeatureBuilder(feature_mode="lexical").fit(CORPUS)
+    X = b.transform(CORPUS)
+    assert X.shape == (len(CORPUS), len(FEATURE_NAMES))
+    assert b.feature_names_ == list(FEATURE_NAMES)
+    assert b.tfidf_ is None
+
+
+def test_feature_mode_ngram_only():
+    b = URLFeatureBuilder(feature_mode="ngram").fit(CORPUS)
+    X = b.transform(CORPUS)
+    assert X.shape[0] == len(CORPUS)
+    assert X.shape[1] == len(b.tfidf_.vocabulary_)
+    assert all(n.startswith("ngram:") for n in b.feature_names_)
+
+
+def test_feature_mode_invalid_rejected():
+    import pytest
+    with pytest.raises(ValueError):
+        URLFeatureBuilder(feature_mode="bogus").fit(CORPUS)
+
+
+def test_v1_pickle_bundle_compatibility():
+    """Regression (v1.1): bundles saved BEFORE feature_mode existed must
+    still transform - a missing attribute means 'combined'."""
+    b = URLFeatureBuilder().fit(CORPUS)
+    expected = b.transform(CORPUS)
+    del b.feature_mode          # simulate the v1.0 pickled state exactly
+    X = b.transform(CORPUS)
+    assert X.shape == expected.shape
+    assert (X != expected).nnz == 0   # identical output, no crash

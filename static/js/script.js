@@ -169,11 +169,11 @@ function renderVerdict(res) {
   $("#verdict-body").innerHTML = `
     <div class="verdict-line">
       ${verdictBadge(res.verdict)}
-      <span class="score-num mono ${isPhish ? "red" : "green"}">${fmtPct(res.probability, res.probability < 0.01 ? 2 : 1)}</span>
+      <span class="score-num mono txt-sev-${String(res.severity || "LOW").toLowerCase()}">${fmtPct(res.probability, res.probability < 0.01 ? 2 : 1)}</span>
       <span class="score-label dim">CALIBRATED PHISHING PROBABILITY</span>
       ${sevBadge(res.severity)}
     </div>
-    <div class="score-bar ${isPhish ? "fill-red" : "fill-green"}">
+    <div class="score-bar fill-sev-${String(res.severity || "LOW").toLowerCase()}">
       <div class="score-fill" style="width:${Math.min(100, Number(res.probability) * 100).toFixed(2)}%"></div>
       <div class="thr-mark" style="left:${(Number(res.threshold) * 100).toFixed(2)}%" title="classification threshold"></div>
     </div>
@@ -224,7 +224,7 @@ function renderDecon(ioc) {
 
 function renderShap(sh) {
   $("#shap-meta").textContent =
-    `base ${fmtVal(sh.base_value, 3)} · output ${fmtVal(sh.raw_margin, 3)} · lexical ${fmtVal(sh.lexical_total, 2)} · n-grams ${fmtVal(sh.ngram_total, 2)}`;
+    `base ${fmtVal(sh.base_value, 3)} · output ${fmtVal(sh.raw_margin, 3)} · space ${esc(sh.space || "—")} · lexical ${fmtVal(sh.lexical_total, 2)} · n-grams ${fmtVal(sh.ngram_total, 2)}`;
   const all = [...(sh.increasing || []), ...(sh.decreasing || [])];
   const maxC = Math.max(1e-9, ...all.map((x) => Math.abs(Number(x.contribution))));
   const rows = (list) => {
@@ -239,6 +239,11 @@ function renderShap(sh) {
       </div>`).join("");
   };
   $("#shap-body").innerHTML = `
+    <div class="shap-legend">
+      <span><span class="legend-swatch swatch-pos"></span>INCREASES PHISHING RISK</span>
+      <span><span class="legend-swatch swatch-neg"></span>REDUCES PHISHING RISK</span>
+      <span class="mono">space: ${esc(sh.space || "—")}</span>
+    </div>
     <div class="shap-sub red-text">FEATURES INCREASING PHISHING RISK</div>${rows(sh.increasing)}
     <div class="shap-sub green-text">FEATURES REDUCING PHISHING RISK</div>${rows(sh.decreasing)}
     <div class="footnote dim">${esc(sh.note || "")}</div>`;
@@ -334,7 +339,7 @@ function renderVt(vt) {
       <div class="stat-grid">
         ${statBox("ENGINES DETECTED", (vt.engines_detected ?? 0) + " / " + (vt.engines_total ?? 0), det > 0 ? "red" : "green")}
         ${statBox("MALICIOUS", s.malicious ?? "—", "red")}
-        ${statBox("SUSPICIOUS", s.suspicious ?? "—", "amber")}
+        ${statBox("SUSPICIOUS", s.suspicious ?? "—", "yellow")}
         ${statBox("HARMLESS", s.harmless ?? "—", "green")}
         ${statBox("UNDETECTED", s.undetected ?? "—", "")}
       </div>

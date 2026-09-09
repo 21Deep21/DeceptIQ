@@ -1,7 +1,7 @@
 /* Phishing URL Analyzer — SOC console styling.
    Design language: dark charcoal/slate, flat 1px borders, compact technical
    panels, monospace values, restrained semantic colors (green = safe,
-   amber/orange = warning, red = genuine high risk). No gradients, no glow,
+   yellow = warning, red family = high risk, red = genuine high risk). No gradients, no glow,
    no large radii, no decorative elements. */
 
 :root {
@@ -16,10 +16,10 @@
   --text-dim: #7d8590;
   --green: #3fb950;
   --green-bg: rgba(63, 185, 80, 0.12);
-  --amber: #d29922;
-  --amber-bg: rgba(210, 153, 34, 0.12);
-  --orange: #f0883e;
-  --orange-bg: rgba(240, 136, 62, 0.12);
+  --yellow: #e3b341;
+  --yellow-bg: rgba(227, 179, 65, 0.14);
+  --red-deep: #f0883e;
+  --red-deep-bg: rgba(240, 136, 62, 0.12);
   --red: #f85149;
   --red-bg: rgba(248, 81, 73, 0.12);
   --blue: #58a6ff;
@@ -61,7 +61,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 }
 .chip.ok { color: var(--green); border-color: rgba(63, 185, 80, 0.4); }
 .chip.vt-ok { color: var(--green); border-color: rgba(63, 185, 80, 0.4); }
-.chip.vt-rate_limited { color: var(--amber); border-color: rgba(210, 153, 34, 0.4); }
+.chip.vt-rate_limited { color: var(--yellow); border-color: rgba(210, 153, 34, 0.4); }
 .chip.vt-error { color: var(--red); border-color: rgba(248, 81, 73, 0.4); }
 .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); display: inline-block; }
 .dot.off { background: var(--red); }
@@ -154,8 +154,8 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .v-safe { color: var(--green); border-color: var(--green); background: var(--green-bg); }
 .v-phishing { color: var(--red); border-color: var(--red); background: var(--red-bg); }
 .sev-low { color: var(--green); border-color: rgba(63, 185, 80, 0.6); background: var(--green-bg); }
-.sev-medium { color: var(--amber); border-color: rgba(210, 153, 34, 0.6); background: var(--amber-bg); }
-.sev-high { color: var(--orange); border-color: rgba(240, 136, 62, 0.6); background: var(--orange-bg); }
+.sev-medium { color: var(--yellow); border-color: rgba(210, 153, 34, 0.6); background: var(--yellow-bg); }
+.sev-high { color: var(--red-deep); border-color: rgba(240, 136, 62, 0.6); background: var(--red-deep-bg); }
 .sev-critical { color: var(--red); border-color: var(--red); background: var(--red-bg); }
 .score-num { font-size: 26px; font-weight: 600; }
 .score-label { font-size: 10px; letter-spacing: 0.1em; }
@@ -173,12 +173,12 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .decon-table tr:last-child td { border-bottom: none; }
 .decon-k { width: 170px; font-size: 10px; letter-spacing: 0.08em; }
 .decon-v { font-size: 12px; color: var(--text-bright); word-break: break-all; }
-.decon-table tr.hl td { background: var(--amber-bg); }
-.decon-table tr.hl .decon-v { color: var(--amber); }
+.decon-table tr.hl td { background: var(--yellow-bg); }
+.decon-table tr.hl .decon-v { color: var(--yellow); }
 .flags-head { font-size: 10px; letter-spacing: 0.1em; margin-top: 12px; padding-bottom: 4px; border-bottom: 1px solid var(--border); }
 .flags-list { list-style: none; margin: 6px 0 0; padding: 0; }
 .flags-list li { display: flex; gap: 10px; padding: 3px 0; }
-.flag-name { color: var(--amber); flex: 0 0 180px; font-size: 11px; }
+.flag-name { color: var(--yellow); flex: 0 0 180px; font-size: 11px; }
 .flag-detail { font-size: 11px; }
 
 /* ---------- SHAP ---------- */
@@ -204,7 +204,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .ioc-table tr:last-child td { border-bottom: none; }
 .ioc-table td:first-child { width: 92px; font-size: 10.5px; }
 .ioc-val { font-size: 11.5px; color: var(--text-bright); word-break: break-all; }
-.ioc-val.warn, .ioc-stat.warn { color: var(--amber); }
+.ioc-val.warn, .ioc-stat.warn { color: var(--yellow); }
 .ioc-stat { font-size: 10.5px; color: var(--text-dim); width: 120px; }
 .ioc-table td:last-child { width: 56px; text-align: right; }
 .copy-btn {
@@ -243,7 +243,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .stat-val { font-size: 16px; }
 .stat-val.red { color: var(--red); }
 .stat-val.green { color: var(--green); }
-.stat-val.amber { color: var(--amber); }
+.stat-val.yellow { color: var(--yellow); }
 .stat-lab { font-size: 9px; letter-spacing: 0.08em; }
 .note-row { font-size: 11px; padding: 4px 0 4px 12px; border-left: 2px solid var(--border); margin: 4px 0; }
 .rationale { font-size: 12px; margin: 0; line-height: 1.6; }
@@ -258,3 +258,30 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
   .nav-btn.active { border-left: none; border-bottom-color: var(--blue); }
   .side-meta { display: none; }
 }
+
+/* ---------- v1.1: traffic-light risk scheme (green / yellow / red) ----------
+   Risk semantics use ONLY the traffic-light family: green = low,
+   yellow = warning/medium, red family (red-deep -> red) = high -> critical.
+   Blue remains reserved for UI selection/system states, never for risk. */
+
+.txt-sev-low { color: var(--green); }
+.txt-sev-medium { color: var(--yellow); }
+.txt-sev-high { color: var(--red-deep); }
+.txt-sev-critical { color: var(--red); }
+
+.fill-sev-low .score-fill { background: var(--green); }
+.fill-sev-medium .score-fill { background: var(--yellow); }
+.fill-sev-high .score-fill { background: var(--red-deep); }
+.fill-sev-critical .score-fill { background: var(--red); }
+
+.shap-legend {
+  display: flex; gap: 16px; align-items: center; flex-wrap: wrap;
+  padding: 2px 0 6px; font-size: 9.5px; letter-spacing: 0.06em;
+  color: var(--text-dim); border-bottom: 1px dotted #232830; margin-bottom: 4px;
+}
+.legend-swatch { display: inline-block; width: 9px; height: 9px;
+  margin-right: 5px; vertical-align: -1px; }
+.swatch-pos { background: var(--red); }
+.swatch-neg { background: var(--green); }
+
+.ioc-table tr:hover td { background: var(--bg-hover); }

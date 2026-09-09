@@ -52,3 +52,13 @@ def test_dual_label_domain_stays_in_one_split():
     assert 5 in counts                       # 3 malicious + 2 benign rows together
     assert sum(1 for c in counts if c > 0) == 1  # all in exactly ONE split
     assert stats["dual_label_domains"] == 1
+
+
+def test_dataset_fingerprint_detects_content_change():
+    from model.split import dataset_fingerprint
+    df = _make_df()
+    fp = dataset_fingerprint(df)
+    assert fp == dataset_fingerprint(df.copy())            # stable
+    df2 = df.copy()
+    df2.loc[0, "url"] = "https://different.example.com/x"  # same row count
+    assert dataset_fingerprint(df2) != fp                   # content change detected

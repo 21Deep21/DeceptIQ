@@ -241,7 +241,29 @@ def _notes(download_report: Dict[str, Any]) -> List[str]:
     for name, info in (download_report or {}).get("sources", {}).items():
         if isinstance(info, dict) and info.get("status") in ("failed", "skipped"):
             notes.append(f"Source '{name}' {info.get('status')}: {info.get('reason', 'unknown')}")
+    snaps = (download_report or {}).get("openphish_snapshots") or []
+    if len(snaps) > 1:
+        notes.append(f"OpenPhish daily accumulation: {len(snaps)} snapshots merged; "
+                     "exact duplicate URLs across days are removed during cleaning.")
     return notes
+
+
+def load_openphish_snapshots(raw_dir: Path) -> Tuple[List[Dict[str, Any]], List[str]]:
+    """Merge the latest feed copy AND all dated accumulation snapshots.
+
+    Matches data/raw/openphish*.txt (both 'openphish_feed.txt' and
+    'openphish_YYYYMMDD.txt'). Exact duplicates across days are removed
+    later by clean_entries - overlapping URLs between daily snapshots are
+    expected and fine.
+    """
+    from dataset.download_data import parse_openphish  # lazy (no import cycle)
+
+    entries: List[Dict[str, Any]] = []
+    names: List[str] = []
+    for p in sorted(raw_dir.glob("openphish*.txt")):
+        names.append(p.name)
+        entries.extend(parse_openphish(p.read_text(encoding="utf-8", errors="replace")))
+    return entries, names
 
 
 def main() -> int:
@@ -254,13 +276,11 @@ def main() -> int:
     ds = cfg["dataset"]
     rng = random.Random(int(ds["random_seed"]))
     entries: List[Dict[str, Any]] = []
-    for fname, parser in (
-        ("openphish_feed.txt", dl.parse_openphish),
-        ("urlhaus_text.txt", dl.parse_urlhaus),
-    ):
-        p = raw_dir / fname
-        if p.exists():
-            entries.extend(parser(p.read_text(encoding="utf-8", errors="replace")))
+    openphish_entries, openphish_snapshots = load_openphish_snapshots(raw_dir)
+    entries.extend(openphish_entries)
+    p = raw_dir / "urlhaus_text.txt"
+    if p.exists():
+        entries.extend(dl.parse_urlhaus(p.read_text(encoding="utf-8", errors="replace")))
     pt = raw_dir / "phishtank.csv"
     if pt.exists():
         entries.extend(dl.parse_phishtank_csv(pt))
@@ -288,7 +308,9 @@ def main() -> int:
         logger.error("no raw feed files in %s - run 'python -m dataset.download_data' first", raw_dir)
         return 1
     stats = build_from_entries(
-        entries, cfg, download_report={"mode": "offline rebuild from data/raw"}
+        entries, cfg,
+        download_report={"mode": "offline rebuild from data/raw",
+                         "openphish_snapshots": openphish_snapshots},
     )
     dl.log_report(stats)
     return 0

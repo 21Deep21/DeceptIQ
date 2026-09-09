@@ -875,3 +875,20 @@ gated live test), frontend assets/markers.
 Seeds fixed (42); frozen splits with manifest; pinned lockfile
 (`requirements.lock.txt`); bundle sha256 in `model/metadata.json`
 (`17883fbb…`); one-time test evaluation enforced in code.
+
+---
+
+## Post-1.0 Increment (v1.1)
+
+- **OpenPhish daily accumulation** (`python -m dataset.accumulate_feeds`, cron-ready):
+  dated snapshots in `data/raw/openphish_YYYYMMDD.txt`, merged by
+  `dataset.build_dataset` (exact duplicates removed at cleaning). Grows the
+  true-phishing share for the next scheduled retrain. No retraining happened
+  in v1.1 — the deployed model is unchanged.
+- **Analysis tooling** (`python -m model.analysis`): feature-group ablation
+  (combined / lexical-only / ngram-only; validation split only, frozen test
+  untouched) → `model/ablation_results.csv`; final-test error categorisation
+  → `model/error_analysis.json`.
+- **UI v1.1**: traffic-light risk colours (green/yellow/red across the score
+  number, score bar, severity badges, IOC warnings, deconstruction highlights),
+  SHAP legend and explanation-space label.

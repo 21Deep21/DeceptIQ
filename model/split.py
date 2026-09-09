@@ -124,6 +124,21 @@ def domain_aware_split(
     return train_df, val_df, test_df, stats
 
 
+def dataset_fingerprint(df: pd.DataFrame) -> str:
+    """Stable content fingerprint (sha256 over label|url).
+
+    Row-count alone cannot detect composition changes: v1.1's daily
+    accumulation merged new URLs while the total stayed 10,000 rows.
+    The fingerprint forces a split rebuild whenever the CONTENT changes,
+    so stale splits are never silently reused for a retrain.
+    """
+    import hashlib
+    h = hashlib.sha256()
+    for url, label in zip(df["url"].tolist(), df["label"].tolist()):
+        h.update(f"{label}|{url}".encode("utf-8"))
+    return h.hexdigest()
+
+
 def get_or_create_splits(
     cfg: Dict[str, Any], force: bool = False
 ) -> Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame, Dict[str, Any]]:
@@ -143,6 +158,7 @@ def get_or_create_splits(
                 manifest.get("dataset_rows") == len(df)
                 and manifest.get("seed") == seed
                 and manifest.get("fracs") == expected_fracs
+                and manifest.get("dataset_sha256") == dataset_fingerprint(df)
             ):
                 train_df = pd.read_csv(split_dir / "train.csv")
                 val_df = pd.read_csv(split_dir / "val.csv")
@@ -166,6 +182,7 @@ def get_or_create_splits(
     manifest = {
         "created_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
         "dataset_rows": len(df),
+        "dataset_sha256": dataset_fingerprint(df),
         "seed": seed,
         "fracs": expected_fracs,
         "rows": stats["rows"],

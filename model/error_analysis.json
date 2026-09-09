@@ -1,0 +1,87 @@
+{
+  "total_errors": 197,
+  "note": "measured from the one-time final-test evaluation (model/test_errors.csv); no new evaluation performed",
+  "false_positives": {
+    "count": 185,
+    "by_source": {
+      "sitemap": 185
+    },
+    "probability": {
+      "min": 0.0706,
+      "median": 0.5487,
+      "mean": 0.4911,
+      "max": 0.931
+    },
+    "url_shape": {
+      "https_share": 0.5946,
+      "ip_host_share": 0.0,
+      "path_gt1_share": 0.9892,
+      "has_query_share": 0.1297,
+      "mean_path_length": 34.1
+    },
+    "most_confident_5": [
+      {
+        "url": "http://matplotlib.org/3.10.1",
+        "calibrated_probability": 0.931
+      },
+      {
+        "url": "http://matplotlib.org/3.9.1",
+        "calibrated_probability": 0.931
+      },
+      {
+        "url": "http://matplotlib.org/3.9.0",
+        "calibrated_probability": 0.931
+      },
+      {
+        "url": "http://matplotlib.org/3.8.4",
+        "calibrated_probability": 0.931
+      },
+      {
+        "url": "http://matplotlib.org/3.9.2",
+        "calibrated_probability": 0.9288
+      }
+    ]
+  },
+  "false_negatives": {
+    "count": 12,
+    "by_source": {
+      "urlhaus": 7,
+      "openphish": 5
+    },
+    "probability": {
+      "min": 0.0046,
+      "median": 0.024,
+      "mean": 0.0311,
+      "max": 0.0663
+    },
+    "url_shape": {
+      "https_share": 1.0,
+      "ip_host_share": 0.0,
+      "path_gt1_share": 0.75,
+      "has_query_share": 0.0,
+      "mean_path_length": 19.4
+    },
+    "most_confident_5": [
+      {
+        "url": "https://icloudoficial.live/",
+        "calibrated_probability": 0.0046
+      },
+      {
+        "url": "https://facebookloginsignub.blogspot.com/",
+        "calibrated_probability": 0.0132
+      },
+      {
+        "url": "https://repositoryserver.dpdns.org/cronsys",
+        "calibrated_probability": 0.0166
+      },
+      {
+        "url": "https://vodafone-on-line.it/lonato-cc-il-leone-shopping-center/offerta-casa-ultra",
+        "calibrated_probability": 0.0177
+      },
+      {
+        "url": "https://repositoryserver.dpdns.org/killersys",
+        "calibrated_probability": 0.0177
+      }
+    ]
+  }
+}

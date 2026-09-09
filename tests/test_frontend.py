@@ -55,3 +55,14 @@ def test_frontend_fetch_endpoints_exist(client):
     rules = {rule.rule for rule in client.application.url_map.iter_rules()}
     for endpoint in referenced:
         assert "/" + endpoint in rules, f"frontend calls unknown endpoint /{endpoint}"
+
+
+def test_traffic_light_risk_scheme(client):
+    css = client.get("/static/css/style.css").get_data(as_text=True)
+    for token in ("--yellow:", "--red-deep:", "txt-sev-critical", "fill-sev-low",
+                  "shap-legend", "swatch-pos"):
+        assert token in css, f"missing traffic-light token: {token}"
+    assert "var(--amber" not in css and "var(--orange" not in css
+    js = client.get("/static/js/script.js").get_data(as_text=True)
+    assert "fill-sev-" in js and "txt-sev-" in js and "shap-legend" in js
+    assert '"amber"' not in js

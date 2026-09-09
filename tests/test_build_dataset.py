@@ -102,3 +102,22 @@ def test_sample_balanced_never_fabricates():
     assert stats["malicious_selected"] == 1
     assert stats["benign_selected"] == 0
     assert len(result) == 1
+
+
+from dataset.build_dataset import load_openphish_snapshots
+
+
+def test_load_openphish_snapshots_merges(tmp_path):
+    (tmp_path / "openphish_feed.txt").write_text(
+        "https://a.example.com/1\n", encoding="utf-8")
+    (tmp_path / "openphish_20260901.txt").write_text(
+        "https://a.example.com/1\nhttps://b.example.com/2\n", encoding="utf-8")
+    entries, names = load_openphish_snapshots(tmp_path)
+    assert len(entries) == 3   # duplicates removed LATER by clean_entries
+    assert set(names) == {"openphish_20260901.txt", "openphish_feed.txt"}
+    assert all(e["label"] == 1 and e["source"] == "openphish" for e in entries)
+
+
+def test_load_openphish_snapshots_empty(tmp_path):
+    entries, names = load_openphish_snapshots(tmp_path)
+    assert entries == [] and names == []
