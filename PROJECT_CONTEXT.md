@@ -7,7 +7,7 @@ future session can continue with identical context. If a fact is not in
 this file, re-measure it — never invent it.
 
 Environment: Fedora Workstation, Python 3.14.7, venv `.venv`, repo
-https://github.com/21Deep21/phishing-url-analyzer (private). Never commit
+https://github.com/21Deep21/DeceptIQ (private). Never commit
 secrets; the VirusTotal key lives only in the git-ignored `.env`.
 
 ---
