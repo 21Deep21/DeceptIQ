@@ -1,10 +1,10 @@
-# phishing-url-analyzer configuration
+# DeceptIQ configuration
 # IMPORTANT: secrets must NEVER be stored here - environment variables only
 # (a git-ignored .env file may supply them; see appconfig.load_env_file).
 
 application:
-  name: phishing-url-analyzer
-  version: 1.1.0
+  name: DeceptIQ
+  version: 1.2.0
 
 server:
   host: 127.0.0.1
@@ -46,8 +46,8 @@ history:
 
 alerts:
   enabled: true
-  vendor: PhishingUrlAnalyzer
-  product: URL Analysis Platform
+  vendor: DeceptIQ
+  product: Malicious URL Detection
   max_bytes: 5242880
   backup_count: 3
 
@@ -288,7 +288,7 @@ explainability:
     max_encoded_samples: 5
 
 network:
-  user_agent: "phishing-url-analyzer/1.1.0 (MCA academic research project; defensive URL analysis)"
+  user_agent: "DeceptIQ/1.2.0 (MCA academic research project; defensive URL analysis)"
   feed_connect_timeout: 10
   feed_read_timeout: 60
   feed_retries: 3

@@ -15,3 +15,6 @@ catboost   # optional at runtime: auto-skipped with an honest report if unavaila
 shap       # optional at runtime: LightGBM native TreeSHAP is the fallback
 flask
 flask-limiter
+
+# Documentation tooling (report figures; not imported by the application)
+matplotlib
