@@ -49,9 +49,16 @@ def _load_done(path: Path) -> set:
         if not line:
             continue
         try:
-            done.add(json.loads(line)["domain"])
+            rec = json.loads(line)
+            domain = rec["domain"]
         except (json.JSONDecodeError, KeyError):
             continue
+        # rate_limited is OUR pacing artifact, not domain behavior: re-attempt
+        # such domains on resume. ok/not_found/timeout/error are final
+        # observations. Re-attempts APPEND, so consumers must use the LAST
+        # record per domain (documented rule for Phase B).
+        if rec.get("status") != "rate_limited":
+            done.add(domain)
     return done
 
 

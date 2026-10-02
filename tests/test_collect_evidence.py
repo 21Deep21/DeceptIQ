@@ -56,3 +56,16 @@ def test_collect_never_dies_on_query_exception(tmp_path):
     recs = _read(tmp_path / "dns.jsonl")
     assert len(recs) == 1 and recs[0]["status"] == "error" and recs[0]["fields"] is None
     assert summary["dns"]["statuses"] == {"error": 1}
+
+
+def test_collect_retries_rate_limited_on_resume(tmp_path):
+    # rate_limited is our pacing artifact -> re-attempted; the old rejection
+    # stays in the log, so consumers must take the LAST record per domain
+    p = tmp_path / "dns.jsonl"
+    p.write_text(json.dumps({"domain": "a.example.com", "status": "rate_limited",
+                             "fields": None}) + "\n", encoding="utf-8")
+    summary = collect_evidence(["a.example.com"], {"dns": _dns_q}, tmp_path, delay=0)
+    recs = _read(p)
+    assert len(recs) == 2                       # old rejection + new attempt
+    assert recs[-1]["status"] == "ok"           # last record wins
+    assert summary["dns"]["attempted"] == 1
