@@ -330,3 +330,21 @@ model:
       Domains are assigned to exactly one split. test.csv is FROZEN: not used
       for feature fitting, model selection, hyperparameter or threshold
       decisions; evaluated once in Phase 3 after the final model is fixed.
+
+# Research increment v2.0 (failure-aware feature acquisition) — Phase A
+evidence:
+  dir: data/processed/evidence
+  groups: [dns, rdap]
+  dns_timeout: 5
+  rdap_timeout: 8
+  request_delay_seconds: 0.5
+  progress_every: 50
+  note: >
+    One-time LOGGED acquisition of passive domain evidence (DNS, RDAP) for
+    every unique registrable domain in urls.csv. IP-literal hosts are
+    skipped (domain-level evidence does not apply). Each request records
+    duration and status; policies are later evaluated by REPLAYING these
+    recorded costs (draft section 6: acquisition logs frozen before
+    evaluation). RDAP uses the IANA bootstrap redirector (rdap.org).
+    TLS is deliberately deferred (decision D1): a TLS handshake contacts
+    the analyzed host, conflicting with the project's never-contact rule.
