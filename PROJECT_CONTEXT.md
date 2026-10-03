@@ -34,18 +34,21 @@ secrets; the VirusTotal key lives only in the git-ignored `.env`.
 9. **No casual retraining.** The deployed bundle is frozen; retraining is
    a deliberate full procedure (section 6).
 
-## 2. CURRENT STATE (v1.1, commit 3bc5432)
+## 2. CURRENT STATE (v2.0.0)
 
-- **Deployed model:** RandomForest, sigmoid-calibrated, threshold
-  **0.0706**, bundle `model/model.joblib` (sha256 `17883fbb81cd...`),
-  model_version `random_forest@2026-09-06T14:14:31`.
-- **Serving:** Flask console at http://127.0.0.1:5000 (`python app.py`).
-- **Test suite:** 173 collected, 166 passed, 7 skipped (network/JIT-gated).
-- **Dataset on disk is AHEAD of the model (intentional staging):**
-  daily OpenPhish accumulation merged (86 phishing URLs in `urls.csv` vs
-  57 at training time). The deployed model was NOT retrained.
-- **v1 artifacts archived** in `model_v1/` (LightGBM, threshold 0.7833)
-  for the before/after comparison story.
+- **Deployed v1 stack (default /predict):** unchanged - RandomForest @ 0.0706,
+  calibrated, serving since Phase 3R.
+- **v2.0 research increment (Phases A-E) COMPLETE:** frozen evidence base
+  (DNS 0.949 / RDAP 0.624 availability, 3,065 domains); fusion model
+  (model_v2/, threshold 0.0392, 4-condition masking, one-time tested);
+  policy replay B1/B2/B3/P1 (one-time; B3/P1 ~99.4% of B2 F1 at 25% of
+  requests); Phase D analyses (sub-6s SLA floor; budget-as-regularizer;
+  failure-immune classification; P1 most graceful degradation; ablation
+  flat at two groups); Phase E live cascade (opt-in include_evidence on
+  /predict, per-condition calibrators, fusion SHAP with evidence_total,
+  console ACQUISITION TRACE panel).
+- **Three one-time guards armed:** model_v2 test, policy test replay,
+  test-side budget analysis. Re-runs require --force and are recorded.
 
 ---
 
@@ -191,3 +194,9 @@ data/processed/dataset_stats.json).
 11. **Commit after green, not before** - violated twice during Phase D
     (committed with failing tests / crashed run); harmless only because
     nothing one-time had been consumed. Restore the gate discipline.
+12. **shap TreeExplainer needs a DENSE ndarray** in this build (np.isnan
+    validation rejects sparse input) - bit us three times: v1 service,
+    Phase 3R, fusion service. Always X.todense() first.
+13. **Truncated displays lie** - a test fixture URL copied from a
+    70-char-truncated log line was the wrong URL (p0 0.0012, not 0.42).
+    Measure fixture values from the bundle, never copy from output.
