@@ -152,7 +152,7 @@ def test_build_profiles_measures_records():
             "rdap": {"x.test": {"status": "ok", "duration_ms": 300.0}}}
     p = build_profiles(st, y, hosted, st, y, hosted, recs, THR)
     assert p["dns"].availability == pytest.approx(0.5)
-    assert p["dns"].p95_ms == pytest.approx(400.0)
+    assert p["dns"].p95_ms == pytest.approx(400.0)   # ceil index: n=2 -> max
     assert p["rdap"].availability == pytest.approx(1.0)
     assert 0.0 <= p["dns"].stability <= 1.0
     assert p["dns"].score > 0 and p["rdap"].score > 0

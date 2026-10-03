@@ -134,8 +134,12 @@ def build_profiles(states_train, y_train, hosted_train,
         n = len(recs)
         availability = (sum(1 for r in recs if r.get("status") == "ok") / n) if n else 0.0
         durs = sorted(float(r.get("duration_ms") or 0.0) for r in recs)
-        p95 = durs[max(0, int(0.95 * len(durs)) - 1)] if durs else 0.0
-        p99 = durs[max(0, int(0.99 * len(durs)) - 1)] if durs else 0.0
+        # ceil-based order-statistic index: correct at small n (n=2 -> p95 is
+        # the max), unchanged at large n vs the previous floor form
+        import math
+        def _pct(q):
+            return durs[max(0, math.ceil(q * len(durs)) - 1)] if durs else 0.0
+        p95, p99 = _pct(0.95), _pct(0.99)
 
         dp = np.abs(states_val[cond] - states_val["none"])[hv]
         mean_abs_dp = float(dp.mean()) if dp.size else 0.0
