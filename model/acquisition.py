@@ -125,6 +125,8 @@ def build_profiles(states_train, y_train, hosted_train,
     ws = float(w.get("stability", 1.0)); wl = float(w.get("latency", 1.0))
     hv = np.asarray(hosted_val, dtype=bool)
     ht = np.asarray(hosted_train, dtype=bool)
+    y_train = np.asarray(y_train)   # callers may pass lists; boolean masks
+    y_val = np.asarray(y_val)       # below require ndarray
     profiles: Dict[str, GroupProfile] = {}
     for g in GROUPS:
         cond = "dns_only" if g == "dns" else "rdap_only"
