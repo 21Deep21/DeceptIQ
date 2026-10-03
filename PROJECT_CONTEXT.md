@@ -200,3 +200,10 @@ data/processed/dataset_stats.json).
 13. **Truncated displays lie** - a test fixture URL copied from a
     70-char-truncated log line was the wrong URL (p0 0.0012, not 0.42).
     Measure fixture values from the bundle, never copy from output.
+14. **Per-condition calibrators shift cross-condition comparisons** - the
+    live cascade's initial (none) and final (acquired-condition)
+    probabilities come from DIFFERENT sigmoid mappings, so p0->final can
+    move opposite to SHAP's evidence_total (raw-model attribution). The
+    frozen band was also selected under shared calibration (Phase C) and
+    is applied to per-condition probabilities - documented approximation;
+    re-freezing the band under per-condition calibration is future work.

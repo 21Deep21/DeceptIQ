@@ -318,7 +318,10 @@ class AcquisitionService:
                          "budget-checked). Costs are measured request durations. "
                          "The analyzed host is never contacted; DNS/RDAP are passive "
                          "third-party services. Display enrichment flags are ignored "
-                         "in cascade mode."),
+                         "in cascade mode. NOTE: initial and final probabilities use "
+                         "condition-specific calibrators, so their difference includes "
+                         "the calibration mapping change; SHAP evidence_total is the "
+                         "model-side attribution of the evidence block."),
             },
         }
         sh = self._explain(X, final_p)
