@@ -362,3 +362,15 @@ model_v2:
     NOT served by app.py until Phase E. Bound to the frozen evidence logs
     via a recorded fingerprint. Temporal caveat: evidence was acquired
     after the feed snapshot, so not_found partly reflects takedown lag.
+
+# Acquisition controller (v2.0 Phase C) - replay-based, no live requests.
+acquisition:
+  uncertainty_band: [0.02, 0.90]   # default; overridden by validation-frozen selection
+  max_requests: 2                  # per-URL external request budget
+  latency_budget_ms: null          # null = unlimited (Phase D budget analysis varies this)
+  min_group_score: 0.0             # P1 expected-value floor (ablation hook)
+  score_weights: {value: 1.0, availability: 1.0, stability: 1.0, latency: 1.0}
+  note: >
+    Policies B1/B2/B3/P1 replay the frozen Phase A evidence logs; costs
+    charged are the RECORDED durations. Band and profiles are selected on
+    train+validation and frozen before the one-time test replay.
