@@ -337,7 +337,7 @@ evidence:
   groups: [dns, rdap]
   dns_timeout: 5
   rdap_timeout: 8
-  request_delay_seconds: 0.5
+  request_delay_seconds: 2
   progress_every: 50
   note: >
     One-time LOGGED acquisition of passive domain evidence (DNS, RDAP) for
@@ -348,3 +348,17 @@ evidence:
     evaluation). RDAP uses the IANA bootstrap redirector (rdap.org).
     TLS is deliberately deferred (decision D1): a TLS handshake contacts
     the analyzed host, conflicting with the project's never-contact rule.
+
+# Fusion model (v2.0 Phase B) - separate from the deployed v1 stack.
+model_v2:
+  dir: model_v2
+  model_path: model_v2/model.joblib
+  metadata_path: model_v2/metadata.json
+  threshold_path: model_v2/threshold.json
+  metrics_path: model_v2/model_metrics.csv
+  note: >
+    Fusion model: URL features + 14 evidence features (DNS/RDAP derived +
+    missingness indicators), trained with 4-condition group masking.
+    NOT served by app.py until Phase E. Bound to the frozen evidence logs
+    via a recorded fingerprint. Temporal caveat: evidence was acquired
+    after the feed snapshot, so not_found partly reflects takedown lag.

@@ -1,0 +1,116 @@
+{
+  "model_name": "random_forest_v2_fusion",
+  "created_at": "2026-10-03T01:50:45+00:00",
+  "selection_rationale": "Fusion model (v2.0 Phase B): RandomForest (the documented v1 selection; no new model comparison - the research contribution is the evidence-aware feature space, not classifier choice) trained on URL features (26 dense + char 3-5-gram TF-IDF) + 14 evidence features (DNS/RDAP derived + ok/not_found/failed missingness indicators), with 4-condition group-masking augmentation so one predictor handles any acquisition outcome. TEMPORAL CAVEAT (measured, documented): evidence was acquired after the feed snapshot, so not_found partly reflects phishing-infrastructure takedown lag; full-evidence results are an upper bound for runtime value. Threshold selected on the FULL-EVIDENCE validation condition; the masked fast path inherits it (Phase C may revisit with condition-specific thresholds).",
+  "evidence_log_fingerprint": "cf92a0f70e1d1b289136fcb33035556d31d8585fd99a6056414dd0199069e333",
+  "dataset_fingerprint": "f165738e3550be972af105fa26cab87f8cdd0e246a34b706ef4f2d42d002e932",
+  "split_stats": {
+    "seed": 42,
+    "fracs": {
+      "train": 0.6,
+      "val": 0.2,
+      "test": 0.2
+    },
+    "rows": {
+      "train": 5866,
+      "val": 1891,
+      "test": 2243
+    },
+    "by_label": {
+      "train": {
+        "1": 2968,
+        "0": 2898
+      },
+      "val": {
+        "1": 1012,
+        "0": 879
+      },
+      "test": {
+        "0": 1223,
+        "1": 1020
+      }
+    },
+    "domains": {
+      "train": 3762,
+      "val": 1254,
+      "test": 1255
+    },
+    "dual_label_domains": 1,
+    "domain_overlap": {
+      "train_val": 0,
+      "train_test": 0,
+      "val_test": 0
+    }
+  },
+  "threshold": {
+    "threshold": 0.039190954269208794,
+    "recall": 0.9950592885375494,
+    "precision": 0.9007155635062611,
+    "fallback": false,
+    "fallback_reason": null,
+    "n_qualifying_thresholds": 68
+  },
+  "threshold_selected_on": "validation, full-evidence condition",
+  "test_results": {
+    "full": {
+      "metrics": {
+        "accuracy": 0.8564,
+        "precision": 0.7624,
+        "recall": 0.9941,
+        "f1": 0.863,
+        "roc_auc": 0.9938,
+        "pr_auc": 0.9937,
+        "tn": 907,
+        "fp": 316,
+        "fn": 6,
+        "tp": 1014
+      },
+      "subgroup_domain_hosted": {
+        "accuracy": 0.7561,
+        "precision": 0.2236,
+        "recall": 0.9381,
+        "f1": 0.3611,
+        "roc_auc": 0.9369,
+        "pr_auc": 0.6417,
+        "tn": 907,
+        "fp": 316,
+        "fn": 6,
+        "tp": 91
+      },
+      "brier": 0.0432,
+      "ece_10bin": 0.0449
+    },
+    "none": {
+      "metrics": {
+        "accuracy": 0.8484,
+        "precision": 0.7522,
+        "recall": 0.9941,
+        "f1": 0.8564,
+        "roc_auc": 0.9923,
+        "pr_auc": 0.9923,
+        "tn": 889,
+        "fp": 334,
+        "fn": 6,
+        "tp": 1014
+      },
+      "subgroup_domain_hosted": {
+        "accuracy": 0.7424,
+        "precision": 0.2141,
+        "recall": 0.9381,
+        "f1": 0.3487,
+        "roc_auc": 0.9221,
+        "pr_auc": 0.5413,
+        "tn": 889,
+        "fp": 334,
+        "fn": 6,
+        "tp": 91
+      },
+      "brier": 0.0528,
+      "ece_10bin": 0.0574
+    }
+  },
+  "n_test_rows": 2243,
+  "temporal_caveat": "evidence acquired after the feed snapshot; not_found partly reflects takedown lag; full-evidence results are an upper bound",
+  "test_evaluated": true,
+  "test_evaluated_at": "2026-10-03T01:50:45+00:00"
+}

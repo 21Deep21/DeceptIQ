@@ -39,3 +39,4 @@ Thumbs.db
 data/scans.db-wal
 data/scans.db-shm
 model_v1/*.joblib
+model_v2/*.joblib
