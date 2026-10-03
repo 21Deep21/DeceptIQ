@@ -146,13 +146,18 @@ def cv_stability(states_train, y_train, dom_train, thr, seed=42, k=5):
     F1(gain of each group's condition vs none). Stability = agreement of the
     gain SIGN and magnitude across folds - saturation-resistant because
     held-out folds are not memorized. Returns {group: stability in [0,1]}."""
-    domains = np.asarray(dom_train, dtype=object)
+    # Group keys must be sortable by numpy: IP-literal rows carry None,
+    # which np.unique cannot sort against strings. Sanitize to a sentinel;
+    # those rows are excluded from the gain masks below regardless.
+    domains = np.asarray([d if d is not None else "__ip_host__"
+                          for d in dom_train], dtype=object)
+    hosted = np.asarray([d is not None for d in dom_train], dtype=bool)
     y = np.asarray(y_train)
     skf = StratifiedGroupKFold(n_splits=k, shuffle=True, random_state=seed)
     gains: Dict[str, List[float]] = {g: [] for g in GROUPS}
     for tr_idx, ho_idx in skf.split(domains, y, groups=domains):
         mask = np.zeros(len(y), dtype=bool); mask[ho_idx] = True
-        mask &= domains != None                                    # hosted only
+        mask &= hosted                                             # hosted only
         if mask.sum() < 20:
             continue
         base = _f1(states_train, "none", y, mask, thr)
