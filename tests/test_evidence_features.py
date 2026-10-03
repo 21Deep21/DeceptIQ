@@ -49,7 +49,7 @@ def test_ok_records_populate_numerics(tmp_path):
     assert rdap[0] == 1
     # age: 2016-10-02 -> 2026-10-02 = 3653 days (incl. leap days)
     assert 3650 <= rdap[3] <= 3656
-    assert 7300 <= rdap[4] <= 7310                              # expiry ~10y
+    assert 3650 <= rdap[4] <= 3656                              # expiry ~10y (2026->2036)
     assert rdap[5] == 2                                          # nameservers
 
 

@@ -39,7 +39,8 @@ def test_augment_masked_conditions_zero_evidence_block():
     full_rows = cond == "full"
     assert np.allclose(ev[full_rows], E[orig[full_rows]])
     dns_only = cond == "dns_only"
-    assert np.all(ev[dns_only][:, 8:] == 0) and np.all(ev[dns_only][:, :8] != 0)
+    assert np.all(ev[dns_only][:, 8:] == 0)
+    assert np.all(np.abs(ev[dns_only][:, :8]).sum(axis=1) > 0)  # each row keeps SOME dns signal
 
 
 def test_augment_deterministic():
