@@ -176,3 +176,27 @@ def evidence_log_fingerprint(log_dir) -> str:
         h.update(name.encode("utf-8"))
         h.update((log_dir / name).read_bytes())
     return h.hexdigest()
+
+
+def evidence_vector_from_records(dns_rec: Optional[dict],
+                                  rdap_rec: Optional[dict]) -> np.ndarray:
+    """14-dim evidence vector from live or logged record dicts.
+
+    Records use the log shape ({status, fields}); this is the single
+    conversion point shared by log replay and the live cascade (Phase E),
+    so live acquisitions produce exactly the training representation.
+    """
+    return np.asarray(_dns_vector(dns_rec or {}) + _rdap_vector(rdap_rec or {}),
+                      dtype=np.float64)
+
+
+def evidence_vector_from_records(dns_rec: Optional[dict],
+                                  rdap_rec: Optional[dict]) -> np.ndarray:
+    """14-dim evidence vector from live or logged record dicts.
+
+    Records use the log shape ({status, fields}); this is the single
+    conversion point shared by log replay and the live cascade (Phase E),
+    so live acquisitions produce exactly the training representation.
+    """
+    return np.asarray(_dns_vector(dns_rec or {}) + _rdap_vector(rdap_rec or {}),
+                      dtype=np.float64)

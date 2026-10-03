@@ -896,3 +896,43 @@ Seeds fixed (42); frozen splits with manifest; pinned lockfile
 ## AI-assistant / collaborator handoff
 
 Read `PROJECT_CONTEXT.md` first - it is the authoritative state + facts ledger + working rules for anyone (human or AI) continuing this project.
+
+---
+
+## Research Increment v2.0 — Failure-Aware Feature Acquisition
+
+Implements the acquisition research (uncertainty-gated, reliability-aware
+passive evidence) on top of the deployed v1 platform. The default /predict
+path and the v1 bundle are untouched; the cascade is opt-in
+(`"include_evidence": true`) and labeled with the v2 model.
+
+- **Evidence base (Phase A):** one-time logged DNS/RDAP acquisition over all
+  3,065 registrable domains (resume-capable, rate-limit re-attempts; logs
+  frozen read-only). Measured: DNS availability 0.949 (p95 5.7 s), RDAP
+  0.624 (p95 8.7 s); 21.4% of corpus domains registry-dead.
+- **Fusion model (Phase B, `model_v2/`):** URL features + 14 evidence
+  features with ok/not_found/failed missingness indicators; trained under
+  4-condition group masking; sigmoid-calibrated; threshold 0.0392
+  (validation-selected); one-time tested (F1 0.8630 full / 0.8564 none).
+  Evidence moves 249/5,466 domain-hosted URLs by >0.01 (max ±0.27).
+- **Policy replay (Phase C):** B1/B2/B3/P1 over frozen costs. Test: B3/P1
+  reach ~99.4% of B2's F1 with 75% fewer requests and 65% lower p95 latency.
+  Evidence buys precision, not recall.
+- **Analyses (Phase D):** sub-6 s SLA floor (conservative p95 eligibility);
+  budget-as-regularizer (6 s test budget: F1 0.8641 @ 0.147 req — better
+  than unlimited); classification is failure-immune under all failure
+  scenarios (missingness design); P1 degrades most gracefully in
+  acquisition success; score-term ablation flat at two groups (scoping
+  result); stability unmeasurable under augmentation (needs prospective
+  splits). Artifacts: model_v2/{policy_evaluation, policy_analysis}.json,
+  *_analysis.csv, analysis_figures/.
+- **Live cascade (Phase E):** P1 running live (frozen band/profiles, live
+  DNS/RDAP with strict timeouts, early stopping, budget checks),
+  per-condition calibrators (validation-fitted; consumed test evaluations
+  NOT recomputed), fusion TreeSHAP with an evidence_total block, and the
+  console ACQUISITION TRACE panel. The analyzed host is never contacted.
+
+Scoped limitations: P1 ≈ B3 at two groups (ranking is trivial when DNS
+dominates every axis); temporal caveat (not_found partly reflects takedown
+lag between feed snapshot and evidence collection); masked-condition
+calibration refined on validation only.

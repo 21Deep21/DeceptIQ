@@ -178,3 +178,16 @@ When any measured number changes after a re-run, UPDATE THIS LEDGER in the
 same commit. This file must never disagree with the artifacts
 (model/model_metrics.csv, model/metadata.json,
 data/processed/dataset_stats.json).
+
+---
+
+## 9. V2.0 PITFALLS (append to section 7)
+
+9. **numpy cannot sort object arrays mixing None and str** - sanitize group
+   keys to a sentinel before StratifiedGroupKFold (fixed in
+   analyze_policies.cv_stability).
+10. **pandas stores None budgets as NaN** - check pd.isna() BEFORE int()
+    formatting (fixed in figP2 labels).
+11. **Commit after green, not before** - violated twice during Phase D
+    (committed with failing tests / crashed run); harmless only because
+    nothing one-time had been consumed. Restore the gate discipline.

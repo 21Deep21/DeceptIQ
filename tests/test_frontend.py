@@ -66,3 +66,10 @@ def test_traffic_light_risk_scheme(client):
     js = client.get("/static/js/script.js").get_data(as_text=True)
     assert "fill-sev-" in js and "txt-sev-" in js and "shap-legend" in js
     assert '"amber"' not in js
+
+
+def test_cascade_frontend_wiring(client):
+    html = client.get("/").get_data(as_text=True)
+    assert "ACQUISITION TRACE" in html and 'id="opt-evidence"' in html
+    js = client.get("/static/js/script.js").get_data(as_text=True)
+    assert "renderAcquisition" in js and "include_evidence" in js

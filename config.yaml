@@ -4,7 +4,7 @@
 
 application:
   name: DeceptIQ
-  version: 1.2.0
+  version: 2.0.0
 
 server:
   host: 127.0.0.1
@@ -288,7 +288,7 @@ explainability:
     max_encoded_samples: 5
 
 network:
-  user_agent: "DeceptIQ/1.2.0 (MCA academic research project; defensive URL analysis)"
+  user_agent: "DeceptIQ/2.0.0 (MCA academic research project; defensive URL analysis)"
   feed_connect_timeout: 10
   feed_read_timeout: 60
   feed_retries: 3

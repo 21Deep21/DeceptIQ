@@ -101,3 +101,14 @@ def test_log_fingerprint_binds_content(tmp_path):
     assert fp1 == evidence_log_fingerprint(tmp_path)     # stable
     _write_logs(tmp_path, [DNS_OK], [{**RDAP_OK, "status": "not_found", "fields": None}])
     assert evidence_log_fingerprint(tmp_path) != fp1     # content-bound
+
+
+def test_evidence_vector_from_records_public_helper():
+    from features.evidence_features import evidence_vector_from_records
+    dns = {"status": "ok", "fields": {"a_record_count": 2, "a_record_ttl": 60,
+                                      "has_mx": True, "ns_count": 2, "ns_diversity": 1}}
+    rdap = {"status": "not_found", "fields": None}
+    v = evidence_vector_from_records(dns, rdap)
+    assert v.shape == (14,) and v[0] == 1 and v[3] == 2 and v[9] == 1
+    z = evidence_vector_from_records(None, None)
+    assert np.all(z == 0)                     # not-acquired state

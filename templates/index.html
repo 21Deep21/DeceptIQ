@@ -50,6 +50,7 @@
             <div class="scan-opts">
               <label class="opt"><input type="checkbox" id="opt-enrich"> WHOIS / DNS enrichment</label>
               <label class="opt"><input type="checkbox" id="opt-vt"> VirusTotal cross-check</label>
+              <label class="opt"><input type="checkbox" id="opt-evidence"> Evidence escalation (cascade)</label>
               <span class="opt-note dim">Optional network lookups — the analyzed URL is never visited</span>
             </div>
           </form>
@@ -67,6 +68,12 @@
             </span>
           </div>
           <div class="panel-body" id="verdict-body"></div>
+        </div>
+
+        <div class="panel">
+        <div class="panel hidden" id="acq-panel">
+          <div class="panel-header"><span>ACQUISITION TRACE — EVIDENCE CASCADE</span><span id="acq-meta" class="mono dim ellip"></span></div>
+          <div class="panel-body" id="acq-body"></div>
         </div>
 
         <div class="panel">

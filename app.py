@@ -38,6 +38,7 @@ from features.url_utils import MalformedURLError, normalize_url
 from services.alert_logger import AlertLogger
 from services.prediction_service import PredictionService
 from services.scan_store import ScanStore, utc_now_iso
+from services.acquisition_service import AcquisitionService
 from services.virustotal_service import VirusTotalClient
 
 logger = logging.getLogger("app")
@@ -71,7 +72,8 @@ def create_app(config_path: Optional[str] = None,
                overrides: Optional[Dict[str, Any]] = None,
                configure_logging: bool = True,
                service: Optional[PredictionService] = None,
-               vt_client: Optional[VirusTotalClient] = None) -> Flask:
+               vt_client: Optional[VirusTotalClient] = None,
+               acq_service: Optional[AcquisitionService] = None) -> Flask:
     """Application factory.
 
     `service` lets tests share one PredictionService across app
@@ -113,6 +115,8 @@ def create_app(config_path: Optional[str] = None,
     app.extensions["limiter"] = limiter
     app.extensions["prediction_service"] = service
     app.extensions["scan_store"] = store
+    if acq_service is not None:
+        app.extensions["acquisition_service"] = acq_service
 
     batch_limit = int(api_cfg.get("batch_limit", 50))
     history_default_limit = int(api_cfg.get("history_default_limit", 50))
@@ -133,9 +137,11 @@ def create_app(config_path: Optional[str] = None,
             verdict=result["verdict"],
             probability=result["probability"],
             severity=result["severity"],
-            threshold=service.threshold,
-            model_version=service.model_version,
-            shap_backend=service.explainer.backend,
+            threshold=float(result.get("threshold", service.threshold)),
+            model_version=str((result.get("model") or {}).get(
+                "version", service.model_version)),
+            shap_backend=str((result.get("shap") or {}).get(
+                "backend", service.explainer.backend)),
             top_shap={
                 "increasing": (shap.get("increasing") or [])[:top_shap_inc],
                 "decreasing": (shap.get("decreasing") or [])[:top_shap_dec],
@@ -149,8 +155,9 @@ def create_app(config_path: Optional[str] = None,
                 url=result["url"],
                 probability=result["probability"],
                 severity=result["severity"],
-                threshold=service.threshold,
-                model=service.model_version,
+                threshold=float(result.get("threshold", service.threshold)),
+                model=str((result.get("model") or {}).get(
+                    "version", service.model_version)),
                 client_ip=request.remote_addr or "-",
                 scan_id=scan_id,
             )
@@ -173,6 +180,9 @@ def create_app(config_path: Optional[str] = None,
             "threshold": service.threshold,
             "shap_backend": service.explainer.backend_label,
             "cache": service.cache_stats,
+            "cascade": ("available"
+                        if pathlib.Path(str(cfg["model_v2"]["model_path"])).exists()
+                        else "unavailable"),
             "time": utc_now_iso(),
         })
 
@@ -219,8 +229,34 @@ def create_app(config_path: Optional[str] = None,
             }}), 400
         include_enrichment = bool(data.get("include_enrichment", enrichment_default))
         include_external = bool(data.get("include_external", external_default))
+        include_evidence = bool(data.get("include_evidence", False))
+        if include_evidence:
+            # lazy construction: the v2 cascade (bundle + SHAP JIT) loads on
+            # first use, never at boot; the app works fully without model_v2/
+            if "acquisition_service" not in app.extensions:
+                try:
+                    app.extensions["acquisition_service"] = AcquisitionService(
+                        str(cfg["model_v2"]["model_path"]),
+                        str(pathlib.Path(cfg["model_v2"]["dir"])
+                            / "policy_evaluation.json"),
+                        str(pathlib.Path(cfg["model_v2"]["dir"])
+                            / "condition_calibrators.joblib"),
+                        cfg)
+                except Exception as exc:
+                    logger.warning("evidence cascade unavailable (%s) - "
+                                   "include_evidence disabled", exc)
+                    app.extensions["acquisition_service"] = None
+            acq = app.extensions.get("acquisition_service")
+            if acq is None:
+                return jsonify({"error": {
+                    "code": "cascade_unavailable",
+                    "message": "evidence cascade is not available "
+                               "(model_v2 bundle or policy evaluation missing)"}}), 503
         try:
-            result = service.predict(data["url"], include_enrichment=include_enrichment)
+            if include_evidence:
+                result = acq.analyze(data["url"])
+            else:
+                result = service.predict(data["url"], include_enrichment=include_enrichment)
         except MalformedURLError as exc:
             logger.info("predict rejected malformed url=%r: %s",
                         sanitize_url_for_logging(data["url"]), exc)

@@ -137,6 +137,7 @@ async function runScan(url, opts) {
     const payload = { url };
     if (opts && opts.enrich) payload.include_enrichment = true;
     if (opts && opts.vt) payload.include_external = true;
+    if (opts && opts.evidence) payload.include_evidence = true;
     const res = await postJSON("/predict", payload);
     state.result = res;
     renderResult(res);
@@ -157,11 +158,34 @@ function sevBadge(s) { return `<span class="badge sev-${String(s || "").toLowerC
 function renderResult(res) {
   $("#result").classList.remove("hidden");
   renderVerdict(res);
+  renderAcquisition(res.acquisition);
   renderDecon(res.ioc || {});
   renderShap(res.shap || {});
   renderIoc(res.ioc || {});
   renderEnrich(res.enrichment);
   renderVt(res.virustotal);
+}
+
+function renderAcquisition(acq) {
+  const panel = $("#acq-panel");
+  if (!acq) { panel.classList.add("hidden"); return; }
+  panel.classList.remove("hidden");
+  const reqs = (acq.requests || []).map(r =>
+    `<li><span class="flag-name mono">${esc(r.group)}</span>` +
+    `<span class="dim flag-detail">${esc(r.status)} · ${Number(r.duration_ms).toFixed(0)} ms</span></li>`
+  ).join("");
+  $("#acq-meta").textContent =
+    `${acq.policy} · band ${acq.band[0]}–${acq.band[1]}`;
+  $("#acq-body").innerHTML = `
+    <div class="kv-row"><span class="k dim">STAGE 1 — URL-ONLY</span>
+      <span class="v mono">p = ${Number(acq.initial_probability).toFixed(4)}</span></div>
+    <div class="kv-row"><span class="k dim">${acq.escalated ? "STAGE 2 — WITH EVIDENCE" : "DECISION"}</span>
+      <span class="v mono">p = ${Number(acq.final_probability).toFixed(4)} · ${acq.escalated
+        ? esc(acq.final_condition) : "no escalation (confident or not domain-hosted)"}</span></div>
+    <div class="flags-head dim">LIVE REQUESTS (passive third-party services; host never contacted)</div>
+    <ul class="flags-list">${reqs || '<li><span class="dim">none</span></li>'}</ul>
+    <div class="meta-line mono dim">total acquisition time ${Number(acq.total_latency_ms || 0).toFixed(0)} ms · model evidence, not display enrichment</div>
+    <div class="footnote dim">${esc(acq.note || "")}</div>`;
 }
 
 function renderVerdict(res) {
@@ -224,7 +248,7 @@ function renderDecon(ioc) {
 
 function renderShap(sh) {
   $("#shap-meta").textContent =
-    `base ${fmtVal(sh.base_value, 3)} · output ${fmtVal(sh.raw_margin, 3)} · space ${esc(sh.space || "—")} · lexical ${fmtVal(sh.lexical_total, 2)} · n-grams ${fmtVal(sh.ngram_total, 2)}`;
+    `base ${fmtVal(sh.base_value, 3)} · output ${fmtVal(sh.raw_margin, 3)} · space ${esc(sh.space || "—")} · lexical ${fmtVal(sh.lexical_total, 2)} · n-grams ${fmtVal(sh.ngram_total, 2)}${sh.evidence_total === undefined ? "" : ` · evidence ${fmtVal(sh.evidence_total, 2)}`}`;
   const all = [...(sh.increasing || []), ...(sh.decreasing || [])];
   const maxC = Math.max(1e-9, ...all.map((x) => Math.abs(Number(x.contribution))));
   const rows = (list) => {
@@ -555,7 +579,7 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
     const url = $("#url-input").value.trim();
     if (!url) { showMsg("#scan-msg", "Enter a URL to analyze.", "err"); return; }
-    runScan(url, { enrich: $("#opt-enrich").checked, vt: $("#opt-vt").checked });
+    runScan(url, { enrich: $("#opt-enrich").checked, vt: $("#opt-vt").checked, evidence: $("#opt-evidence").checked });
   });
 
   $("#btn-export-json").addEventListener("click", () => {
