@@ -1,0 +1,6 @@
+variant,f1,recall,precision,mean_requests,req_dns,req_rdap
+full_score,0.9455,0.9951,0.9007,0.1698,168,153
+value_only,0.9455,0.9951,0.9007,0.1698,168,153
+no_availability,0.9455,0.9951,0.9007,0.1698,168,153
+no_stability,0.9455,0.9951,0.9007,0.1698,168,153
+no_latency,0.9455,0.9951,0.9007,0.1698,168,153

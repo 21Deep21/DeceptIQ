@@ -277,7 +277,8 @@ def make_figures(out_dir: Path, policy_eval: Dict[str, Any],
     for max_req, sub in budget_df.groupby("max_requests"):
         sub = sub.sort_values("latency_budget_ms",
                               key=lambda s: s.fillna(1e9))
-        xs = [f"{int(v/1000)}k" if v else "none" for v in sub["latency_budget_ms"]]
+        xs = ["none" if pd.isna(v) else f"{int(v/1000)}k"
+              for v in sub["latency_budget_ms"]]
         ax.plot(range(len(sub)), sub["f1"], "o-", label=f"max_req={max_req}")
         ax.set_xticks(range(len(sub))); ax.set_xticklabels(xs)
     ax.set_xlabel("latency budget"); ax.set_ylabel("validation F1 (P1)")

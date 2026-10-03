@@ -1,0 +1,620 @@
+{
+  "created_at": "2026-10-03T02:32:07+00:00",
+  "quoted_phase_c_test": {
+    "B1": {
+      "accuracy": 0.8484,
+      "precision": 0.7522,
+      "recall": 0.9941,
+      "f1": 0.8564,
+      "roc_auc": 0.9923,
+      "pr_auc": 0.9923,
+      "tn": 889,
+      "fp": 334,
+      "fn": 6,
+      "tp": 1014,
+      "fpr": 0.2731,
+      "brier": 0.0528,
+      "ece_10bin": 0.0574,
+      "mean_requests": 0.0,
+      "pct_escalated": 0.0,
+      "acquisition_success_rate": null,
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 0.0,
+      "latency_p99_ms": 0.0,
+      "n": 2243
+    },
+    "B2": {
+      "accuracy": 0.8564,
+      "precision": 0.7624,
+      "recall": 0.9941,
+      "f1": 0.863,
+      "roc_auc": 0.9938,
+      "pr_auc": 0.9937,
+      "tn": 907,
+      "fp": 316,
+      "fn": 6,
+      "tp": 1014,
+      "fpr": 0.2584,
+      "brier": 0.0432,
+      "ece_10bin": 0.0449,
+      "mean_requests": 1.177,
+      "pct_escalated": 0.5885,
+      "acquisition_success_rate": 0.7856,
+      "latency_p50_ms": 1063.1,
+      "latency_p95_ms": 8112.2,
+      "latency_p99_ms": 11663.2,
+      "n": 2243
+    },
+    "B3": {
+      "accuracy": 0.856,
+      "precision": 0.7622,
+      "recall": 0.9931,
+      "f1": 0.8625,
+      "roc_auc": 0.9929,
+      "pr_auc": 0.9929,
+      "tn": 907,
+      "fp": 316,
+      "fn": 7,
+      "tp": 1013,
+      "fpr": 0.2584,
+      "brier": 0.0449,
+      "ece_10bin": 0.046,
+      "mean_requests": 0.2942,
+      "pct_escalated": 0.1471,
+      "acquisition_success_rate": 0.7727,
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 2819.3,
+      "latency_p99_ms": 3914.3,
+      "n": 2243
+    },
+    "P1": {
+      "accuracy": 0.856,
+      "precision": 0.7622,
+      "recall": 0.9931,
+      "f1": 0.8625,
+      "roc_auc": 0.9929,
+      "pr_auc": 0.9929,
+      "tn": 907,
+      "fp": 316,
+      "fn": 7,
+      "tp": 1013,
+      "fpr": 0.2584,
+      "brier": 0.0449,
+      "ece_10bin": 0.046,
+      "mean_requests": 0.288,
+      "pct_escalated": 0.1471,
+      "acquisition_success_rate": 0.7802,
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 2819.3,
+      "latency_p99_ms": 3914.3,
+      "n": 2243
+    }
+  },
+  "d1_budget_validation": [
+    {
+      "policy": "P1",
+      "max_requests": 1,
+      "latency_budget_ms": 1000.0,
+      "f1": 0.9367,
+      "recall": 0.9951,
+      "precision": 0.8849,
+      "fpr": 0.149,
+      "mean_requests": 0.0,
+      "pct_escalated": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "policy": "P1",
+      "max_requests": 1,
+      "latency_budget_ms": 2000.0,
+      "f1": 0.9367,
+      "recall": 0.9951,
+      "precision": 0.8849,
+      "fpr": 0.149,
+      "mean_requests": 0.0,
+      "pct_escalated": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "policy": "P1",
+      "max_requests": 1,
+      "latency_budget_ms": 4000.0,
+      "f1": 0.9367,
+      "recall": 0.9951,
+      "precision": 0.8849,
+      "fpr": 0.149,
+      "mean_requests": 0.0,
+      "pct_escalated": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "policy": "P1",
+      "max_requests": 1,
+      "latency_budget_ms": 8000.0,
+      "f1": 0.9429,
+      "recall": 0.9951,
+      "precision": 0.8959,
+      "fpr": 0.1331,
+      "mean_requests": 0.0888,
+      "pct_escalated": 0.0888,
+      "latency_p95_ms": 681.1
+    },
+    {
+      "policy": "P1",
+      "max_requests": 1,
+      "latency_budget_ms": 16000.0,
+      "f1": 0.9429,
+      "recall": 0.9951,
+      "precision": 0.8959,
+      "fpr": 0.1331,
+      "mean_requests": 0.0888,
+      "pct_escalated": 0.0888,
+      "latency_p95_ms": 681.1
+    },
+    {
+      "policy": "P1",
+      "max_requests": 1,
+      "latency_budget_ms": null,
+      "f1": 0.9429,
+      "recall": 0.9951,
+      "precision": 0.8959,
+      "fpr": 0.1331,
+      "mean_requests": 0.0888,
+      "pct_escalated": 0.0888,
+      "latency_p95_ms": 681.1
+    },
+    {
+      "policy": "P1",
+      "max_requests": 2,
+      "latency_budget_ms": 1000.0,
+      "f1": 0.9367,
+      "recall": 0.9951,
+      "precision": 0.8849,
+      "fpr": 0.149,
+      "mean_requests": 0.0,
+      "pct_escalated": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "policy": "P1",
+      "max_requests": 2,
+      "latency_budget_ms": 2000.0,
+      "f1": 0.9367,
+      "recall": 0.9951,
+      "precision": 0.8849,
+      "fpr": 0.149,
+      "mean_requests": 0.0,
+      "pct_escalated": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "policy": "P1",
+      "max_requests": 2,
+      "latency_budget_ms": 4000.0,
+      "f1": 0.9367,
+      "recall": 0.9951,
+      "precision": 0.8849,
+      "fpr": 0.149,
+      "mean_requests": 0.0,
+      "pct_escalated": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "policy": "P1",
+      "max_requests": 2,
+      "latency_budget_ms": 8000.0,
+      "f1": 0.9429,
+      "recall": 0.9951,
+      "precision": 0.8959,
+      "fpr": 0.1331,
+      "mean_requests": 0.0888,
+      "pct_escalated": 0.0888,
+      "latency_p95_ms": 681.1
+    },
+    {
+      "policy": "P1",
+      "max_requests": 2,
+      "latency_budget_ms": 16000.0,
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "pct_escalated": 0.0888,
+      "latency_p95_ms": 1522.2
+    },
+    {
+      "policy": "P1",
+      "max_requests": 2,
+      "latency_budget_ms": null,
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "pct_escalated": 0.0888,
+      "latency_p95_ms": 1522.2
+    }
+  ],
+  "d2_stability_rework": {
+    "cv_stability": {
+      "dns": 0.0,
+      "rdap": 0.0
+    },
+    "reranked_scores": {
+      "dns": 1.6650377095818246e-12,
+      "rdap": 2.870399041764353e-13
+    },
+    "p1_prime_validation": {
+      "accuracy": 0.9387,
+      "precision": 0.9007,
+      "recall": 0.9951,
+      "f1": 0.9455,
+      "roc_auc": 0.9973,
+      "pr_auc": 0.9981,
+      "tn": 768,
+      "fp": 111,
+      "fn": 5,
+      "tp": 1007,
+      "fpr": 0.1263,
+      "brier": 0.0153,
+      "ece_10bin": 0.006,
+      "mean_requests": 0.1698,
+      "pct_escalated": 0.0888,
+      "acquisition_success_rate": 0.8193,
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 1522.2,
+      "latency_p99_ms": 3621.1,
+      "n": 1891
+    },
+    "p1_prime_test_onetime": {
+      "accuracy": 0.856,
+      "precision": 0.7622,
+      "recall": 0.9931,
+      "f1": 0.8625,
+      "roc_auc": 0.9929,
+      "pr_auc": 0.9929,
+      "tn": 907,
+      "fp": 316,
+      "fn": 7,
+      "tp": 1013,
+      "fpr": 0.2584,
+      "brier": 0.0449,
+      "ece_10bin": 0.046,
+      "mean_requests": 0.288,
+      "pct_escalated": 0.1471,
+      "acquisition_success_rate": 0.7802,
+      "latency_p50_ms": 0.0,
+      "latency_p95_ms": 2819.3,
+      "latency_p99_ms": 3914.3,
+      "n": 2243
+    },
+    "note": "pre-registered policy-definition revision; the Phase C main comparison is NOT recomputed"
+  },
+  "d1_test_budget_onetime": [
+    {
+      "max_requests": 1,
+      "latency_budget_ms": 2000.0,
+      "f1": 0.8564,
+      "recall": 0.9941,
+      "precision": 0.7522,
+      "mean_requests": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "max_requests": 1,
+      "latency_budget_ms": 6000.0,
+      "f1": 0.8641,
+      "recall": 0.9941,
+      "precision": 0.7641,
+      "mean_requests": 0.1471,
+      "latency_p95_ms": 1912.4
+    },
+    {
+      "max_requests": 1,
+      "latency_budget_ms": null,
+      "f1": 0.8641,
+      "recall": 0.9941,
+      "precision": 0.7641,
+      "mean_requests": 0.1471,
+      "latency_p95_ms": 1912.4
+    },
+    {
+      "max_requests": 2,
+      "latency_budget_ms": 2000.0,
+      "f1": 0.8564,
+      "recall": 0.9941,
+      "precision": 0.7522,
+      "mean_requests": 0.0,
+      "latency_p95_ms": 0.0
+    },
+    {
+      "max_requests": 2,
+      "latency_budget_ms": 6000.0,
+      "f1": 0.8641,
+      "recall": 0.9941,
+      "precision": 0.7641,
+      "mean_requests": 0.1471,
+      "latency_p95_ms": 1912.4
+    },
+    {
+      "max_requests": 2,
+      "latency_budget_ms": null,
+      "f1": 0.8625,
+      "recall": 0.9931,
+      "precision": 0.7622,
+      "mean_requests": 0.288,
+      "latency_p95_ms": 2819.3
+    }
+  ],
+  "d3_failure_validation": [
+    {
+      "scenario": "baseline",
+      "policy": "B2",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 1.0418,
+      "acquisition_success_rate": 0.7746
+    },
+    {
+      "scenario": "baseline",
+      "policy": "B3",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1777,
+      "acquisition_success_rate": 0.8214
+    },
+    {
+      "scenario": "baseline",
+      "policy": "P1",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "acquisition_success_rate": 0.8193
+    },
+    {
+      "scenario": "disable_dns",
+      "policy": "B2",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 1.0418,
+      "acquisition_success_rate": 0.298
+    },
+    {
+      "scenario": "disable_dns",
+      "policy": "B3",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1777,
+      "acquisition_success_rate": 0.3393
+    },
+    {
+      "scenario": "disable_dns",
+      "policy": "P1",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "acquisition_success_rate": 0.3146
+    },
+    {
+      "scenario": "disable_rdap",
+      "policy": "B2",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 1.0418,
+      "acquisition_success_rate": 0.4766
+    },
+    {
+      "scenario": "disable_rdap",
+      "policy": "B3",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1777,
+      "acquisition_success_rate": 0.4821
+    },
+    {
+      "scenario": "disable_rdap",
+      "policy": "P1",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "acquisition_success_rate": 0.5047
+    },
+    {
+      "scenario": "timeouts_dns_20pct",
+      "policy": "B2",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 1.0418,
+      "acquisition_success_rate": 0.636
+    },
+    {
+      "scenario": "timeouts_dns_20pct",
+      "policy": "B3",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1777,
+      "acquisition_success_rate": 0.6994
+    },
+    {
+      "scenario": "timeouts_dns_20pct",
+      "policy": "P1",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "acquisition_success_rate": 0.6916
+    },
+    {
+      "scenario": "timeouts_dns_50pct",
+      "policy": "B2",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 1.0418,
+      "acquisition_success_rate": 0.5117
+    },
+    {
+      "scenario": "timeouts_dns_50pct",
+      "policy": "B3",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1777,
+      "acquisition_success_rate": 0.5655
+    },
+    {
+      "scenario": "timeouts_dns_50pct",
+      "policy": "P1",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "acquisition_success_rate": 0.5514
+    },
+    {
+      "scenario": "timeouts_rdap_20pct",
+      "policy": "B2",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 1.0418,
+      "acquisition_success_rate": 0.6954
+    },
+    {
+      "scenario": "timeouts_rdap_20pct",
+      "policy": "B3",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1777,
+      "acquisition_success_rate": 0.7738
+    },
+    {
+      "scenario": "timeouts_rdap_20pct",
+      "policy": "P1",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "acquisition_success_rate": 0.7788
+    },
+    {
+      "scenario": "timeouts_rdap_50pct",
+      "policy": "B2",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 1.0418,
+      "acquisition_success_rate": 0.6188
+    },
+    {
+      "scenario": "timeouts_rdap_50pct",
+      "policy": "B3",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1777,
+      "acquisition_success_rate": 0.6905
+    },
+    {
+      "scenario": "timeouts_rdap_50pct",
+      "policy": "P1",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "fpr": 0.1263,
+      "mean_requests": 0.1698,
+      "acquisition_success_rate": 0.7072
+    }
+  ],
+  "d4_ablation_validation": [
+    {
+      "variant": "full_score",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "mean_requests": 0.1698,
+      "req_dns": 168,
+      "req_rdap": 153
+    },
+    {
+      "variant": "value_only",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "mean_requests": 0.1698,
+      "req_dns": 168,
+      "req_rdap": 153
+    },
+    {
+      "variant": "no_availability",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "mean_requests": 0.1698,
+      "req_dns": 168,
+      "req_rdap": 153
+    },
+    {
+      "variant": "no_stability",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "mean_requests": 0.1698,
+      "req_dns": 168,
+      "req_rdap": 153
+    },
+    {
+      "variant": "no_latency",
+      "f1": 0.9455,
+      "recall": 0.9951,
+      "precision": 0.9007,
+      "mean_requests": 0.1698,
+      "req_dns": 168,
+      "req_rdap": 153
+    }
+  ],
+  "provenance": {
+    "evidence_log_fingerprint": "cf92a0f70e1d1b289136fcb33035556d31d8585fd99a6056414dd0199069e333",
+    "model_v2_created_at": "2026-10-03T01:50:45+00:00",
+    "threshold": 0.039190954269208794,
+    "band": [
+      0.02,
+      0.75
+    ]
+  },
+  "test_budget_evaluated": true,
+  "test_budget_evaluated_at": "2026-10-03T02:32:07+00:00"
+}
