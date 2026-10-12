@@ -112,6 +112,13 @@ async function pollHealth() {
     $("#side-backend").textContent = shortBackend(h.shap_backend);
     const cch = h.cache || {};
     $("#side-cache").textContent = `${cch.entries ?? "—"}/${cch.max_entries ?? "—"}`;
+    $("#sb-dot").classList.remove("off");
+    $("#sb-status").textContent = "ONLINE";
+    $("#sb-model").textContent = h.model || "—";
+    $("#sb-thr").textContent = Number(h.threshold).toFixed(4);
+    $("#sb-cache").textContent = `${cch.entries ?? "—"}/${cch.max_entries ?? "—"}`;
+    const verChip = $("#ver-chip");
+    if (verChip) verChip.textContent = "v" + (h.version || "—");
     const vt = (h.virustotal || {}).status || "—";
     const vtChip = $("#chip-vt");
     vtChip.textContent = "VT: " + String(vt).toUpperCase();
@@ -119,6 +126,8 @@ async function pollHealth() {
   } catch (e) {
     $("#sys-dot").classList.add("off");
     $("#sys-label").textContent = "SYSTEM OFFLINE";
+    $("#sb-dot").classList.add("off");
+    $("#sb-status").textContent = "OFFLINE";
   }
 }
 function tickClock() {
@@ -141,6 +150,7 @@ async function runScan(url, opts) {
     if (opts && opts.evidence) payload.include_evidence = true;
     const res = await postJSON("/predict", payload);
     state.result = res;
+    scanBump(1);
     renderResult(res);
     $("#result").scrollIntoView({ behavior: "smooth", block: "start" });
   } catch (err) {
@@ -166,6 +176,8 @@ function sevBadge(s) { return `<span class="badge sev-${String(s || "").toLowerC
 
 function renderResult(res) {
   $("#result").classList.remove("hidden");
+  const es = $("#empty-state");
+  if (es) es.classList.add("hidden");
   renderVerdict(res);
   renderAcquisition(res.acquisition);
   renderDecon(res.ioc || {});
@@ -580,6 +592,22 @@ function buildCSV(r) {
   return header + "\n" + row + "\n";
 }
 
+/* ---------------- status bar (terminal chrome) ---------------- */
+const BOOT = Date.now();
+const SCAN_COUNT = { n: 0 };
+function scanBump(n) {
+  SCAN_COUNT.n += Number(n) || 0;
+  const el = $("#sb-scans");
+  if (el) el.textContent = String(SCAN_COUNT.n);
+}
+function uptimeTick() {
+  const s = Math.floor((Date.now() - BOOT) / 1000);
+  const two = (x) => String(x).padStart(2, "0");
+  const el = $("#sb-uptime");
+  if (el) el.textContent =
+    `${two(Math.floor(s / 3600))}:${two(Math.floor((s % 3600) / 60))}:${two(s % 60)}`;
+}
+
 /* ---------------- init ---------------- */
 document.addEventListener("DOMContentLoaded", () => {
   $$(".nav-btn").forEach((b) => b.addEventListener("click", () => switchView(b.dataset.view)));
@@ -610,7 +638,11 @@ document.addEventListener("DOMContentLoaded", () => {
     btn.disabled = true;
     const old = btn.textContent;
     btn.textContent = "SCANNING…";
-    try { renderBatch(await postJSON("/predict_batch", { urls })); }
+    try {
+      const data = await postJSON("/predict_batch", { urls });
+      renderBatch(data);
+      scanBump((data.summary || {}).valid || 0);
+    }
     catch (err) { showMsg("#batch-msg", "BATCH FAILED — " + err.message, "err"); }
     finally { btn.disabled = false; btn.textContent = old; }
   });
@@ -651,6 +683,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  document.addEventListener("keydown", (e) => {
+    const tag = ((document.activeElement || {}).tagName || "").toUpperCase();
+    if (e.key === "/" && !/INPUT|TEXTAREA|SELECT/.test(tag)) {
+      e.preventDefault();
+      switchView("investigate");
+      $("#url-input").focus();
+    }
+  });
+  uptimeTick();
+  setInterval(uptimeTick, 1000);
   pollHealth();
   setInterval(pollHealth, 30000);
   tickClock();

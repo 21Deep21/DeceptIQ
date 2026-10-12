@@ -11,7 +11,9 @@
 <header id="topbar">
   <div class="brand">
     <span class="brand-name">DECEPTIQ</span>
-    <span class="brand-sub">EXPLAINABLE INTELLIGENCE · MALICIOUS URL DETECTION</span>
+    <span class="brand-sub">MALICIOUS URL DETECTION</span>
+    <span class="ver-chip" id="ver-chip">v—</span>
+    <span class="env-chip">LOCAL</span>
   </div>
   <div class="top-status">
     <span id="chip-vt" class="chip">VT: —</span>
@@ -43,7 +45,7 @@
         <div class="panel-body">
           <form id="scan-form" autocomplete="off">
             <div class="scan-row">
-              <input id="url-input" type="text" spellcheck="false" autocapitalize="off"
+              <input id="url-input" type="text" spellcheck="false" autocapitalize="off" placeholder="url>"
                      placeholder="https://suspicious.example/login">
               <button type="submit" id="analyze-btn" class="btn-primary">ANALYZE</button>
             </div>
@@ -58,7 +60,15 @@
         </div>
       </div>
 
-      <div id="result" class="hidden">
+      <div class="panel" id="empty-state">
+  <div class="panel-body">
+    <div class="empty-state">no active investigation<br>
+      <span class="dim">submit a url above · verdict / evidence / iocs appear here · press / to focus</span>
+    </div>
+  </div>
+</div>
+
+<div id="result" class="hidden">
         <div class="panel">
           <div class="panel-header">
             <span>VERDICT</span>
@@ -209,6 +219,15 @@
   </main>
 </div>
 
+<footer id="statusbar" aria-label="System status">
+  <div class="seg"><span class="dot off" id="sb-dot"></span><span id="sb-status">CONNECTING</span></div>
+  <div class="seg">MODEL <span class="sb-val" id="sb-model">—</span></div>
+  <div class="seg">THR <span class="sb-val" id="sb-thr">—</span></div>
+  <div class="seg seg-optional">CACHE <span class="sb-val" id="sb-cache">—</span></div>
+  <div class="seg seg-optional">SCANS <span class="sb-val" id="sb-scans">0</span></div>
+  <div class="seg">UPTIME <span class="sb-val" id="sb-uptime">00:00:00</span></div>
+  <div class="seg sb-hint">/ FOCUS · ENTER SUBMIT</div>
+</footer>
 <script src="/static/js/script.js"></script>
 </body>
 </html>
