@@ -68,7 +68,7 @@ def test_default_predict_unchanged_v1(tmp_path, service):
     fake = FakeAcq()
     c = _app(tmp_path, service, acq=fake).test_client()
     body = c.post("/predict", json={"url": "https://example.com/"}).get_json()
-    assert body["model"]["name"] == "random_forest"    # v1 untouched
+    assert body["model"]["name"] == "catboost"         # v1 untouched (2R reselection)
     assert "acquisition" not in body
     assert fake.calls == []
 

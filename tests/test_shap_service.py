@@ -126,3 +126,47 @@ def test_sklearn_rf_shap_backend_probability_space():
     assert (mal.lexical_total + mal.ngram_total) > 0   # evidence direction
     assert (ben.lexical_total + ben.ngram_total) < 0
     assert mal.to_dict()["space"] == "probability"
+
+
+def test_catboost_shap_margin_space():
+    """Regression (2R): CatBoost's TreeExplainer explains the raw log-odds
+    margin; the service must label space 'log-odds' and reconstruct against
+    RawFormulaVal (was: labeled 'probability', reconstructed against
+    predict_proba after the 2R CatBoost selection)."""
+    from catboost import CatBoostClassifier
+
+    X, y = _corpus()
+    pipe = Pipeline([
+        ("features", URLFeatureBuilder()),
+        ("model", CatBoostClassifier(iterations=20, verbose=0,
+                                     allow_writing_files=False, random_state=0)),
+    ])
+    pipe.fit(X, y)
+    ex = ShapExplainer(pipe, backend="shap")
+    assert ex.space == "log-odds"
+    e = ex.explain([X[0]])[0]
+    assert e.reconstruction_error is not None
+    assert e.reconstruction_error < 0.01            # margin identity holds
+    assert e.to_dict()["space"] == "log-odds"
+
+
+def test_catboost_shap_margin_space():
+    """Regression (2R): CatBoost's TreeExplainer explains the raw log-odds
+    margin; the service must label space 'log-odds' and reconstruct against
+    RawFormulaVal (was: labeled 'probability', reconstructed against
+    predict_proba after the 2R CatBoost selection)."""
+    from catboost import CatBoostClassifier
+
+    X, y = _corpus()
+    pipe = Pipeline([
+        ("features", URLFeatureBuilder()),
+        ("model", CatBoostClassifier(iterations=20, verbose=0,
+                                     allow_writing_files=False, random_state=0)),
+    ])
+    pipe.fit(X, y)
+    ex = ShapExplainer(pipe, backend="shap")
+    assert ex.space == "log-odds"
+    e = ex.explain([X[0]])[0]
+    assert e.reconstruction_error is not None
+    assert e.reconstruction_error < 0.01            # margin identity holds
+    assert e.to_dict()["space"] == "log-odds"

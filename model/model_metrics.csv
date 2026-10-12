@@ -1,14 +1,16 @@
 model,stage,n_folds,threshold,trained_at,accuracy,precision,recall,f1,roc_auc,pr_auc,accuracy_std,precision_std,recall_std,f1_std,roc_auc_std,pr_auc_std,tn,fp,fn,tp,notes,brier,ece
-logreg,cv,5.0,0.5,2026-09-06T14:05:28+00:00,0.9762,0.9768,0.9758,0.976,0.9972,0.9976,0.014,0.029,0.0102,0.0136,0.0017,0.0016,,,,,mean+std over grouped folds (train split only),,
-logreg,validation,,0.5,2026-09-06T14:05:28+00:00,0.9647,0.9641,0.9651,0.9646,0.9954,0.9958,,,,,,,972.0,36.0,35.0,968.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
-random_forest,cv,5.0,0.5,2026-09-06T14:05:28+00:00,0.9802,0.9757,0.9862,0.9804,0.9977,0.9977,0.019,0.0392,0.0087,0.0181,0.002,0.0021,,,,,mean+std over grouped folds (train split only),,
-random_forest,validation,,0.5,2026-09-06T14:05:28+00:00,0.9736,0.9657,0.9821,0.9738,0.996,0.9966,,,,,,,973.0,35.0,18.0,985.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
-xgboost,cv,5.0,0.5,2026-09-06T14:05:28+00:00,0.9356,0.8887,0.9946,0.9385,0.9944,0.9942,0.0174,0.0287,0.0042,0.0158,0.0042,0.0053,,,,,mean+std over grouped folds (train split only),,
-xgboost,validation,,0.5,2026-09-06T14:05:28+00:00,0.9269,0.8754,0.995,0.9314,0.9958,0.9962,,,,,,,866.0,142.0,5.0,998.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
-lightgbm,cv,5.0,0.5,2026-09-06T14:05:28+00:00,0.9323,0.8811,0.997,0.9354,0.9977,0.9979,0.0088,0.0124,0.0044,0.0081,0.0013,0.0012,,,,,mean+std over grouped folds (train split only),,
-lightgbm,validation,,0.5,2026-09-06T14:05:28+00:00,0.9324,0.8853,0.993,0.9361,0.9945,0.9951,,,,,,,879.0,129.0,7.0,996.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
-catboost,cv,5.0,0.5,2026-09-06T14:05:28+00:00,0.9653,0.9429,0.9899,0.9657,0.9978,0.9981,0.009,0.0197,0.0071,0.0084,0.0011,0.001,,,,,mean+std over grouped folds (train split only),,
-catboost,validation,,0.5,2026-09-06T14:05:28+00:00,0.9552,0.9278,0.987,0.9565,0.9954,0.9958,,,,,,,931.0,77.0,13.0,990.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
-stacking,validation,,0.5,2026-09-06T14:05:28+00:00,0.9736,0.9666,0.9811,0.9738,0.9962,0.9967,,,,,,,974.0,34.0,19.0,984.0,"grouped stacking: meta=logreg on out-of-fold base probabilities; no outer CV (computational cost, documented); threshold 0.5",,
-random_forest+calibrated,test,,0.0706,2026-09-06T14:14:31+00:00,0.8981,0.8451,0.9882,0.9111,0.9922,0.9938,,,,,,,727.0,185.0,12.0,1009.0,ONE-TIME final test evaluation: calibrated model at deployed threshold,0.0449,0.0309
-random_forest_raw,test,,0.5,2026-09-06T14:14:31+00:00,0.9255,0.8954,0.9726,0.9324,0.9922,0.9938,,,,,,,796.0,116.0,28.0,993.0,ONE-TIME final test evaluation: raw model at default 0.5 (reference),0.0473,0.0582
+logreg,cv,5.0,0.5,2026-10-12T05:37:31+00:00,0.9614,0.9642,0.9586,0.961,0.9917,0.9936,0.0175,0.0324,0.013,0.0171,0.0054,0.0036,,,,,mean+std over grouped folds (train split only),,
+logreg,validation,,0.5,2026-10-12T05:37:31+00:00,0.9553,0.9579,0.955,0.9565,0.97,0.9068,,,,,,,902.0,42.0,45.0,956.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+random_forest,cv,5.0,0.5,2026-10-12T05:37:31+00:00,0.9303,0.8932,0.9761,0.9327,0.9912,0.9921,0.0138,0.0214,0.0079,0.0126,0.0034,0.0029,,,,,mean+std over grouped folds (train split only),,
+random_forest,validation,,0.5,2026-10-12T05:37:31+00:00,0.946,0.9179,0.983,0.9493,0.995,0.9958,,,,,,,856.0,88.0,17.0,984.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+xgboost,cv,5.0,0.5,2026-10-12T05:37:31+00:00,0.9221,0.8708,0.9894,0.9263,0.9919,0.9928,0.016,0.0207,0.0077,0.0145,0.003,0.0023,,,,,mean+std over grouped folds (train split only),,
+xgboost,validation,,0.5,2026-10-12T05:37:31+00:00,0.9573,0.9274,0.995,0.96,0.9975,0.998,,,,,,,866.0,78.0,5.0,996.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+lightgbm,cv,5.0,0.5,2026-10-12T05:37:31+00:00,0.9128,0.856,0.9907,0.9183,0.9922,0.9932,0.0195,0.0254,0.0082,0.0171,0.0033,0.0025,,,,,mean+std over grouped folds (train split only),,
+lightgbm,validation,,0.5,2026-10-12T05:37:31+00:00,0.9486,0.9144,0.993,0.9521,0.9972,0.9978,,,,,,,851.0,93.0,7.0,994.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+catboost,cv,5.0,0.5,2026-10-12T05:37:31+00:00,0.9344,0.8924,0.9861,0.9369,0.9922,0.9932,0.0101,0.0129,0.008,0.0095,0.0035,0.0024,,,,,mean+std over grouped folds (train split only),,
+catboost,validation,,0.5,2026-10-12T05:37:31+00:00,0.9625,0.9386,0.992,0.9645,0.997,0.9976,,,,,,,879.0,65.0,8.0,993.0,"fitted on train, evaluated once on validation (threshold 0.5)",,
+stacking,validation,,0.5,2026-10-12T05:37:31+00:00,0.9712,0.9664,0.978,0.9722,0.9962,0.9968,,,,,,,910.0,34.0,22.0,979.0,"grouped stacking: meta=logreg on out-of-fold base probabilities; no outer CV (computational cost, documented); threshold 0.5",,
+random_forest+calibrated,test,,0.0666,2026-10-12T05:45:08+00:00,0.896,0.8393,0.9827,0.9053,0.9893,0.9913,,,,,,,774.0,185.0,17.0,966.0,ONE-TIME final test evaluation: calibrated model at deployed threshold,0.0456,0.0411
+random_forest_raw,test,,0.5,2026-10-12T05:45:08+00:00,0.9166,0.8756,0.9736,0.922,0.9893,0.9913,,,,,,,823.0,136.0,26.0,957.0,ONE-TIME final test evaluation: raw model at default 0.5 (reference),0.052,0.0577
+catboost+calibrated,test,,0.0291,2026-10-12T05:53:26+00:00,0.915,0.8678,0.9817,0.9212,0.9925,0.9939,,,,,,,812.0,147.0,18.0,965.0,ONE-TIME final test evaluation: calibrated model at deployed threshold,0.0444,0.0445
+catboost_raw,test,,0.5,2026-10-12T05:53:26+00:00,0.9222,0.8817,0.9776,0.9272,0.9925,0.9939,,,,,,,830.0,129.0,22.0,961.0,ONE-TIME final test evaluation: raw model at default 0.5 (reference),0.0494,0.0517

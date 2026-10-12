@@ -1,8 +1,8 @@
 {
-  "model_name": "random_forest",
-  "created_at": "2026-09-06T14:14:31+00:00",
+  "model_name": "catboost",
+  "created_at": "2026-10-12T05:53:26+00:00",
   "random_seed": 42,
-  "selection_rationale": "Random Forest selected from the Phase 2R comparison on dataset revision 1R (benign class: 2,335 observed sitemap deep-link URLs + 2,665 constructed homepages). Measured grouped 5-fold CV on the train split: recall 0.9862 (+/-0.0087), precision 0.9757 (+/-0.0392), F1 0.9804, ROC-AUC 0.9977, PR-AUC 0.9977 - best CV F1 among individual models. Validation at threshold 0.5: accuracy 0.9736, precision 0.9657, recall 0.9821, F1 0.9738, confusion tn=973 fp=35 fn=18 tp=985 - the most balanced operational profile, already satisfying the deployment policy (recall>=0.97, precision>=0.90) at the default threshold. The stacking ensemble was evaluated and NOT retained: validation PR-AUC 0.9967 vs 0.9966 for Random Forest (delta 0.0001, noise-level) with identical F1, while adding four base models, a meta-learner and far harder SHAP explainability. LightGBM (the v1 selection) was demoted: after the benign deep-link fix its 0.5-threshold precision collapsed (CV 0.8811, validation 0.8853, fp=129) - it over-triggers on legitimate URLs with paths; Random Forest dominates it on CV and validation F1. CatBoost had the best CV PR-AUC (0.9981) but lower validation F1 (0.9565) and ~10x slower fitting. Note: with a sklearn RandomForest raw model, shap.TreeExplainer is the single SHAP backend (the LightGBM-native pred_contrib fallback applies to LightGBM pipelines only); the active backend is reported in every explanation.",
+  "selection_rationale": "CatBoost selected in the 2R retrain on the accumulated corpus. 2R grouped 5-fold CV: recall 0.9861 (+/-0.0080), precision 0.8924 (+/-0.0129), F1 0.9369 - best individual CV F1 (RF 0.9327, XGBoost 0.9263, LightGBM 0.9183). Validation @0.5: F1 0.9645, precision 0.9386, recall 0.9920, PR-AUC 0.9976, confusion tn=879 fp=65 fn=8 tp=993 - the strongest precision among the leaders while comfortably meeting the deployment policy at the default threshold. RandomForest (the 1R selection) was fifth of six by validation PR-AUC in 2R (0.9958) with the worst tree-model FP count (88); per the pre-registered decision rule the selection was re-made on validation. The stacking ensemble WON validation F1 (0.9722, +0.0077) - a real gain unlike 1R's noise-level tie - but was not retained: the custom GroupedStackingClassifier cannot be explained by shap.TreeExplainer, and per-URL SHAP evidence is the platform's core feature; it also costs four base models and ~14x the fit time. SELECTION NOTE (discipline): an initial 2R finalize with RandomForest was run and its one-time test consumed (F1 0.9053, recall 0.9827) before the selection correction; that run is retained in model_metrics.csv history. The correction to CatBoost was decided on VALIDATION results only (visible in the Phase 2 comparison before any test evaluation); the RF test numbers were not used for this choice.",
   "calibration": {
     "method": "sigmoid",
     "approach": "CalibratedClassifierCV(FrozenEstimator(raw_pipeline)) fitted on the validation split",
@@ -11,15 +11,15 @@
     "note": "raw model scores are scores, not probabilities; only calibrated outputs are reported as probabilities"
   },
   "threshold": {
-    "threshold": 0.0705674974217222,
-    "recall": 0.9940179461615155,
-    "precision": 0.9063636363636364,
-    "f1_at_threshold": 0.9481692819781264,
+    "threshold": 0.029091953429354705,
+    "recall": 0.995004995004995,
+    "precision": 0.9213691026827012,
+    "f1_at_threshold": 0.9567723342939481,
     "fallback": false,
     "fallback_reason": null,
     "target_recall": 0.97,
     "min_precision": 0.9,
-    "n_qualifying_thresholds": 51,
+    "n_qualifying_thresholds": 95,
     "max_recall_any_threshold": 1.0
   },
   "split_stats": {
@@ -30,30 +30,30 @@
       "test": 0.2
     },
     "rows": {
-      "train": 6056,
-      "val": 2011,
-      "test": 1933
+      "train": 6113,
+      "val": 1945,
+      "test": 1942
     },
     "by_label": {
       "train": {
-        "0": 3080,
-        "1": 2976
+        "0": 3097,
+        "1": 3016
       },
       "val": {
-        "0": 1008,
-        "1": 1003
+        "1": 1001,
+        "0": 944
       },
       "test": {
-        "1": 1021,
-        "0": 912
+        "1": 983,
+        "0": 959
       }
     },
     "domains": {
-      "train": 3762,
-      "val": 1254,
-      "test": 1254
+      "train": 3806,
+      "val": 1269,
+      "test": 1268
     },
-    "dual_label_domains": 1,
+    "dual_label_domains": 2,
     "domain_overlap": {
       "train_val": 0,
       "train_test": 0,
@@ -61,9 +61,9 @@
     }
   },
   "rows": {
-    "train": 6056,
-    "val": 2011,
-    "test": 1933
+    "train": 6113,
+    "val": 1945,
+    "test": 1942
   },
   "feature_set": {
     "dense_lexical": 26,
@@ -71,46 +71,46 @@
   },
   "test_results": {
     "calibrated_at_threshold": {
-      "threshold": 0.0706,
-      "accuracy": 0.8981,
-      "precision": 0.8451,
-      "recall": 0.9882,
-      "f1": 0.9111,
-      "roc_auc": 0.9922,
-      "pr_auc": 0.9938,
-      "tn": 727,
-      "fp": 185,
-      "fn": 12,
-      "tp": 1009,
-      "brier": 0.0449,
-      "ece_10bin": 0.0309
+      "threshold": 0.0291,
+      "accuracy": 0.915,
+      "precision": 0.8678,
+      "recall": 0.9817,
+      "f1": 0.9212,
+      "roc_auc": 0.9925,
+      "pr_auc": 0.9939,
+      "tn": 812,
+      "fp": 147,
+      "fn": 18,
+      "tp": 965,
+      "brier": 0.0444,
+      "ece_10bin": 0.0445
     },
     "raw_at_0.5_reference": {
-      "accuracy": 0.9255,
-      "precision": 0.8954,
-      "recall": 0.9726,
-      "f1": 0.9324,
-      "roc_auc": 0.9922,
-      "pr_auc": 0.9938,
-      "tn": 796,
-      "fp": 116,
-      "fn": 28,
-      "tp": 993,
-      "brier": 0.0473,
-      "ece_10bin": 0.0582
+      "accuracy": 0.9222,
+      "precision": 0.8817,
+      "recall": 0.9776,
+      "f1": 0.9272,
+      "roc_auc": 0.9925,
+      "pr_auc": 0.9939,
+      "tn": 830,
+      "fp": 129,
+      "fn": 22,
+      "tp": 961,
+      "brier": 0.0494,
+      "ece_10bin": 0.0517
     },
-    "n_test_rows": 1933,
-    "n_misclassified": 197
+    "n_test_rows": 1942,
+    "n_misclassified": 165
   },
   "artifacts": {
     "bundle": "model/model.joblib",
-    "bundle_sha256": "17883fbb81cd7922dffef15a4e2e75fdc3c6270f2b3ea042e1d37dbfd81f2547",
+    "bundle_sha256": "826bae4e03d7b0679926b6e884366b071f8c6fbebd8345a3e58714b0ff1de415",
     "threshold_json": "model/threshold.json",
     "metrics_csv": "model/model_metrics.csv",
     "test_errors_csv": "model/test_errors.csv"
   },
   "test_evaluated": true,
-  "test_evaluated_at": "2026-09-06T14:14:31+00:00",
+  "test_evaluated_at": "2026-10-12T05:53:26+00:00",
   "library_versions": {
     "scikit-learn": "1.9.0",
     "numpy": "2.5.2",

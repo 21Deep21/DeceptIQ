@@ -128,10 +128,15 @@ class ShapExplainer:
         self._top_k_default = int(top_k_default)
         self._tree_explainer = None
         self._is_lightgbm = hasattr(self.model, "booster_") and self.model.booster_ is not None
+        # CatBoost: TreeExplainer explains the RAW output (log-odds margin),
+        # like LightGBM - NOT the probability (sklearn RF's raw output is its
+        # probability). Detected via module name; no hard catboost import.
+        self._is_catboost = "catboost" in type(self.model).__module__.lower()
         # Explanation space: LightGBM explains the raw log-odds margin; sklearn
         # models (e.g. RandomForest) have no margin output, so TreeExplainer
         # explains the predicted probability instead. Reported per explanation.
-        self.space = "log-odds" if self._is_lightgbm else "probability"
+        self.space = ("log-odds" if (self._is_lightgbm or self._is_catboost)
+                      else "probability")
         self.backend = self._resolve_backend(backend)
 
     # ------------------------------------------------------------ backend
@@ -221,6 +226,12 @@ class ShapExplainer:
         if self._is_lightgbm:
             return np.asarray(self.model.booster_.predict(Xd, raw_score=True),
                               dtype=np.float64)
+        if self._is_catboost:
+            # CatBoost raw formula value = the log-odds margin that
+            # TreeExplainer explains (NOT predict_proba)
+            return np.asarray(
+                self.model.predict(Xd, prediction_type="RawFormulaVal"),
+                dtype=np.float64).ravel()
         if hasattr(self.model, "predict_proba"):
             return np.asarray(self.model.predict_proba(Xd), dtype=np.float64)[:, 1]
         return None

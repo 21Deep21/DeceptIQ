@@ -1,9 +1,9 @@
 {
   "model_name": "random_forest_v2_fusion",
-  "created_at": "2026-10-03T01:50:45+00:00",
+  "created_at": "2026-10-12T05:58:41+00:00",
   "selection_rationale": "Fusion model (v2.0 Phase B): RandomForest (the documented v1 selection; no new model comparison - the research contribution is the evidence-aware feature space, not classifier choice) trained on URL features (26 dense + char 3-5-gram TF-IDF) + 14 evidence features (DNS/RDAP derived + ok/not_found/failed missingness indicators), with 4-condition group-masking augmentation so one predictor handles any acquisition outcome. TEMPORAL CAVEAT (measured, documented): evidence was acquired after the feed snapshot, so not_found partly reflects phishing-infrastructure takedown lag; full-evidence results are an upper bound for runtime value. Threshold selected on the FULL-EVIDENCE validation condition; the masked fast path inherits it (Phase C may revisit with condition-specific thresholds).",
   "evidence_log_fingerprint": "cf92a0f70e1d1b289136fcb33035556d31d8585fd99a6056414dd0199069e333",
-  "dataset_fingerprint": "f165738e3550be972af105fa26cab87f8cdd0e246a34b706ef4f2d42d002e932",
+  "dataset_fingerprint": "82b3c4e8ab1ca1c5ef1927ad68ceedf8500355d027d8878afe0a34e5ff8372c3",
   "split_stats": {
     "seed": 42,
     "fracs": {
@@ -12,30 +12,30 @@
       "test": 0.2
     },
     "rows": {
-      "train": 5866,
-      "val": 1891,
-      "test": 2243
+      "train": 6113,
+      "val": 1945,
+      "test": 1942
     },
     "by_label": {
       "train": {
-        "1": 2968,
-        "0": 2898
+        "0": 3097,
+        "1": 3016
       },
       "val": {
-        "1": 1012,
-        "0": 879
+        "1": 1001,
+        "0": 944
       },
       "test": {
-        "0": 1223,
-        "1": 1020
+        "1": 983,
+        "0": 959
       }
     },
     "domains": {
-      "train": 3762,
-      "val": 1254,
-      "test": 1255
+      "train": 3806,
+      "val": 1269,
+      "test": 1268
     },
-    "dual_label_domains": 1,
+    "dual_label_domains": 2,
     "domain_overlap": {
       "train_val": 0,
       "train_test": 0,
@@ -43,74 +43,74 @@
     }
   },
   "threshold": {
-    "threshold": 0.039190954269208794,
-    "recall": 0.9950592885375494,
-    "precision": 0.9007155635062611,
+    "threshold": 0.03641735952751895,
+    "recall": 0.993006993006993,
+    "precision": 0.9044585987261147,
     "fallback": false,
     "fallback_reason": null,
-    "n_qualifying_thresholds": 68
+    "n_qualifying_thresholds": 54
   },
   "threshold_selected_on": "validation, full-evidence condition",
   "test_results": {
     "full": {
       "metrics": {
-        "accuracy": 0.8564,
-        "precision": 0.7624,
-        "recall": 0.9941,
-        "f1": 0.863,
-        "roc_auc": 0.9938,
-        "pr_auc": 0.9937,
-        "tn": 907,
-        "fp": 316,
-        "fn": 6,
-        "tp": 1014
+        "accuracy": 0.8893,
+        "precision": 0.8288,
+        "recall": 0.9847,
+        "f1": 0.9,
+        "roc_auc": 0.9917,
+        "pr_auc": 0.9932,
+        "tn": 759,
+        "fp": 200,
+        "fn": 15,
+        "tp": 968
       },
       "subgroup_domain_hosted": {
-        "accuracy": 0.7561,
-        "precision": 0.2236,
-        "recall": 0.9381,
-        "f1": 0.3611,
-        "roc_auc": 0.9369,
-        "pr_auc": 0.6417,
-        "tn": 907,
-        "fp": 316,
-        "fn": 6,
-        "tp": 91
+        "accuracy": 0.8037,
+        "precision": 0.3769,
+        "recall": 0.8897,
+        "f1": 0.5295,
+        "roc_auc": 0.9405,
+        "pr_auc": 0.7917,
+        "tn": 759,
+        "fp": 200,
+        "fn": 15,
+        "tp": 121
       },
-      "brier": 0.0432,
-      "ece_10bin": 0.0449
+      "brier": 0.04,
+      "ece_10bin": 0.0426
     },
     "none": {
       "metrics": {
-        "accuracy": 0.8484,
-        "precision": 0.7522,
-        "recall": 0.9941,
-        "f1": 0.8564,
-        "roc_auc": 0.9923,
-        "pr_auc": 0.9923,
-        "tn": 889,
-        "fp": 334,
-        "fn": 6,
-        "tp": 1014
+        "accuracy": 0.8841,
+        "precision": 0.8201,
+        "recall": 0.9878,
+        "f1": 0.8962,
+        "roc_auc": 0.989,
+        "pr_auc": 0.991,
+        "tn": 746,
+        "fp": 213,
+        "fn": 12,
+        "tp": 971
       },
       "subgroup_domain_hosted": {
-        "accuracy": 0.7424,
-        "precision": 0.2141,
-        "recall": 0.9381,
-        "f1": 0.3487,
-        "roc_auc": 0.9221,
-        "pr_auc": 0.5413,
-        "tn": 889,
-        "fp": 334,
-        "fn": 6,
-        "tp": 91
+        "accuracy": 0.7945,
+        "precision": 0.368,
+        "recall": 0.9118,
+        "f1": 0.5243,
+        "roc_auc": 0.9222,
+        "pr_auc": 0.6963,
+        "tn": 746,
+        "fp": 213,
+        "fn": 12,
+        "tp": 124
       },
-      "brier": 0.0528,
-      "ece_10bin": 0.0574
+      "brier": 0.0523,
+      "ece_10bin": 0.0462
     }
   },
-  "n_test_rows": 2243,
+  "n_test_rows": 1942,
   "temporal_caveat": "evidence acquired after the feed snapshot; not_found partly reflects takedown lag; full-evidence results are an upper bound",
   "test_evaluated": true,
-  "test_evaluated_at": "2026-10-03T01:50:45+00:00"
+  "test_evaluated_at": "2026-10-12T05:58:41+00:00"
 }

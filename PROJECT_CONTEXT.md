@@ -34,21 +34,36 @@ secrets; the VirusTotal key lives only in the git-ignored `.env`.
 9. **No casual retraining.** The deployed bundle is frozen; retraining is
    a deliberate full procedure (section 6).
 
-## 2. CURRENT STATE (v2.0.0)
+## 2. CURRENT STATE (v2.2.0 - 2R retrain)
 
-- **Deployed v1 stack (default /predict):** unchanged - RandomForest @ 0.0706,
-  calibrated, serving since Phase 3R.
-- **v2.0 research increment (Phases A-E) COMPLETE:** frozen evidence base
-  (DNS 0.949 / RDAP 0.624 availability, 3,065 domains); fusion model
-  (model_v2/, threshold 0.0392, 4-condition masking, one-time tested);
-  policy replay B1/B2/B3/P1 (one-time; B3/P1 ~99.4% of B2 F1 at 25% of
-  requests); Phase D analyses (sub-6s SLA floor; budget-as-regularizer;
-  failure-immune classification; P1 most graceful degradation; ablation
-  flat at two groups); Phase E live cascade (opt-in include_evidence on
-  /predict, per-condition calibrators, fusion SHAP with evidence_total,
-  console ACQUISITION TRACE panel).
-- **Three one-time guards armed:** model_v2 test, policy test replay,
-  test-side budget analysis. Re-runs require --force and are recorded.
+- **Deployed v1 stack (default /predict):** CatBoost (2R retrain on the
+  accumulated corpus), sigmoid-calibrated, threshold 0.0291, bundle
+  sha256 826bae4e03d7b067... One-time 2R test: accuracy 0.9150, recall
+  0.9817, precision 0.8678, F1 0.9212, ROC-AUC 0.9925, PR-AUC 0.9939,
+  tn=812 fp=147 fn=18 tp=965, Brier 0.0444.
+- **SELECTION CORRECTION (recorded):** initial 2R finalize ran with
+  RandomForest (1R's selection; its one-time test F1 0.9053 was consumed)
+  before the validation-driven reselection to CatBoost - decided on
+  VALIDATION only (CatBoost best individual CV F1 0.9369; RF fifth of six
+  by val PR-AUC). Both runs in model_metrics.csv history. Stacking won 2R
+  validation F1 (0.9722) but was not retained: no TreeExplainer support
+  (per-URL SHAP is the platform's core feature), ~14x fit cost.
+- **Dataset (2R):** 10,000 rows - openphish 219 (4 accumulated snapshots;
+  was 57 at 1R training), urlhaus 4781, majestic 2665, sitemap 2335.
+  Splits auto-rebuilt by content fingerprint: 6113/1945/1942 rows,
+  domain overlap 0/0/0.
+- **v2 fusion chain refreshed on 2R splits:** threshold 0.0364; test[full]
+  F1 0.9000 vs test[none] 0.8962; Brier 0.0400 vs 0.0523. Policies: B3/P1
+  match B2's F1 at ~16% of its requests (0.184 vs 1.128 mean req).
+  Integrity B1 == test[none] exact. KNOWN 2R LIMITATION: the fusion
+  learner is RandomForest (Phase B decision, made when v1 was RF) while
+  deployed v1 is now CatBoost - the B1 baseline (val F1 0.9705,
+  domain-hosted 0.7826) OUTPERFORMS the fusion model (0.9611 / 0.7297).
+  Within-v2 comparisons remain valid (same learner across conditions);
+  a CatBoost fusion re-comparison is future work.
+- **Option B display:** FLAGGED FOR REVIEW (amber) for alerted p < 0.60
+  (review_threshold in config, exposed via /health).
+- **CatBoost SHAP:** space is log-odds (RawFormulaVal) - see pitfall 15.
 
 ---
 
@@ -207,3 +222,11 @@ data/processed/dataset_stats.json).
     frozen band was also selected under shared calibration (Phase C) and
     is applied to per-condition probabilities - documented approximation;
     re-freezing the band under per-condition calibration is future work.
+
+15. **CatBoost TreeExplainer explains log-odds, not probability** - unlike
+    sklearn RF whose raw output IS predict_proba. After any model swap,
+    verify the SHAP space label and reconstruction target (regression test
+    test_catboost_shap_margin_space). Caught in 2R by the per-URL
+    reconstruction check (recon err 6.23 -> 0.0 after fix); the fix itself
+    needed a formatting-tolerant application - grep the file before
+    patching, always.

@@ -2,14 +2,14 @@
   "target_recall": 0.97,
   "min_precision": 0.9,
   "rule": "maximize recall subject to precision >= min_precision; tie-break: max precision, then lowest threshold; fallback: F2-optimal threshold",
-  "recall_at_default_0.5": 0.9802371541501976,
-  "precision_at_default_0.5": 0.9831516352824579,
-  "n_qualifying_thresholds": 68,
+  "recall_at_default_0.5": 0.975024975024975,
+  "precision_at_default_0.5": 0.9521951219512195,
+  "n_qualifying_thresholds": 54,
   "max_recall_any_threshold": 1.0,
-  "threshold": 0.039190954269208794,
-  "recall": 0.9950592885375494,
-  "precision": 0.9007155635062611,
+  "threshold": 0.03641735952751895,
+  "recall": 0.993006993006993,
+  "precision": 0.9044585987261147,
   "fallback": false,
   "fallback_reason": null,
-  "f1_at_threshold": 0.9455399061032865
+  "f1_at_threshold": 0.9466666666666667
 }

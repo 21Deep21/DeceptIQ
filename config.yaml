@@ -4,7 +4,7 @@
 
 application:
   name: DeceptIQ
-  version: 2.0.0
+  version: 2.2.0
 
 server:
   host: 127.0.0.1
@@ -292,7 +292,7 @@ explainability:
     max_encoded_samples: 5
 
 network:
-  user_agent: "DeceptIQ/2.0.0 (MCA academic research project; defensive URL analysis)"
+  user_agent: "DeceptIQ/2.2.0 (MCA academic research project; defensive URL analysis)"
   feed_connect_timeout: 10
   feed_read_timeout: 60
   feed_retries: 3
@@ -309,7 +309,7 @@ model:
   notes_path: model/phase2_notes.json
   test_errors_path: model/test_errors.csv
   cv_folds: 5
-  selected_model: random_forest
+  selected_model: catboost
   calibration:
     method: sigmoid
     note: >
