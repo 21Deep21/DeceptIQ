@@ -178,7 +178,8 @@ def create_app(config_path: Optional[str] = None,
             "model": service.model_name,
             "model_version": service.model_version,
             "threshold": service.threshold,
-            "shap_backend": service.explainer.backend_label,
+
+            "review_threshold": float(cfg.get("review_threshold", 0.60)),            "shap_backend": service.explainer.backend_label,
             "cache": service.cache_stats,
             "cascade": ("available"
                         if pathlib.Path(str(cfg["model_v2"]["model_path"])).exists()

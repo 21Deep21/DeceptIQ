@@ -31,6 +31,10 @@ api:
 cache:
   max_entries: 512
 
+review_threshold: 0.60              # Option B: alerted p below this displays as
+                                    # FLAGGED FOR REVIEW (console only); API verdict
+                                    # string, alerting and persistence unchanged
+
 severity:
   low_max: 0.25
   medium_max: 0.60

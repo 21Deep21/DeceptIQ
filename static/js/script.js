@@ -108,6 +108,7 @@ async function pollHealth() {
     $("#sys-label").textContent = "SYSTEM ONLINE";
     $("#side-model").textContent = h.model || "—";
     $("#side-threshold").textContent = Number(h.threshold).toFixed(4);
+    if (h.review_threshold !== undefined) REVIEW_THRESHOLD = Number(h.review_threshold);
     $("#side-backend").textContent = shortBackend(h.shap_backend);
     const cch = h.cache || {};
     $("#side-cache").textContent = `${cch.entries ?? "—"}/${cch.max_entries ?? "—"}`;
@@ -150,7 +151,15 @@ async function runScan(url, opts) {
   }
 }
 
-function verdictBadge(v) {
+let REVIEW_THRESHOLD = 0.60;   // refreshed from /health (config-driven, not hardcoded)
+
+function verdictBadge(v, p) {
+  // Option B: an alerted URL below the review threshold displays as
+  // FLAGGED FOR REVIEW (amber) - display honesty only; the API verdict
+  // string, alerting and persistence are unchanged.
+  if (v === "phishing" && p !== undefined && p < REVIEW_THRESHOLD) {
+    return `<span class="badge v-review">FLAGGED FOR REVIEW</span>`;
+  }
   return `<span class="badge ${v === "phishing" ? "v-phishing" : "v-safe"}">${esc(String(v || "—").toUpperCase())}</span>`;
 }
 function sevBadge(s) { return `<span class="badge sev-${String(s || "").toLowerCase()}">${esc(s || "—")}</span>`; }
@@ -192,7 +201,7 @@ function renderVerdict(res) {
   const isPhish = res.verdict === "phishing";
   $("#verdict-body").innerHTML = `
     <div class="verdict-line">
-      ${verdictBadge(res.verdict)}
+      ${verdictBadge(res.verdict, res.probability)}
       <span class="score-num mono txt-sev-${String(res.severity || "LOW").toLowerCase()}">${fmtPct(res.probability, res.probability < 0.01 ? 2 : 1)}</span>
       <span class="score-label dim">CALIBRATED PHISHING PROBABILITY</span>
       ${sevBadge(res.severity)}
@@ -421,7 +430,7 @@ function renderHistory() {
     <tr>
       <td class="mono dim" title="${esc(dateUTC(r.scanned_at))}">${esc(hhmmssUTC(r.scanned_at))}</td>
       <td class="mono url-cell" title="${esc(r.url)}">${esc(truncMid(r.url, 58))}</td>
-      <td>${verdictBadge(r.verdict)}</td>
+      <td>${verdictBadge(r.verdict, r.probability)}</td>
       <td class="mono">${fmtPct(r.probability)}</td>
       <td>${sevBadge(r.severity)}</td>
       <td><button class="btn-mini rescan-btn" type="button" data-url="${esc(r.url)}">RESCAN</button></td>
@@ -451,7 +460,7 @@ function renderBatch(data) {
     }
     return `<tr>
       <td class="mono url-cell" title="${esc(r.url)}">${esc(truncMid(r.url, 54))}</td>
-      <td>${verdictBadge(r.verdict)}</td>
+      <td>${verdictBadge(r.verdict, r.probability)}</td>
       <td class="mono">${fmtPct(r.probability)}</td>
       <td>${sevBadge(r.severity)}</td>
       <td><button class="btn-mini rescan-btn" type="button" data-url="${esc(r.url)}">RESCAN</button></td>
