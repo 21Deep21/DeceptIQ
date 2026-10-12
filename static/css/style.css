@@ -285,3 +285,7 @@ body { background: var(--bg); color: var(--text); font-family: var(--sans); font
 .swatch-neg { background: var(--green); }
 
 .ioc-table tr:hover td { background: var(--bg-hover); }
+
+/* Option B: confidence-honest verdict display */
+.v-review { color: var(--yellow); border-color: var(--yellow);
+            background: var(--yellow-bg); letter-spacing: 0.06em; }
